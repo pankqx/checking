@@ -27,7 +27,7 @@ export function ruleReply(text: string, ctx: Context): string {
   if (/exam|deadline|assignment|lab|due|work|study|pressure/.test(t)) {
     const p = ctx.insights.find((i) => i.id === 'pressure')
     return p
-      ? `${p.body} One trick: pick the smallest piece of the biggest task and do just 15 minutes. Want me to open the Pressure Release room first?`
+      ? `${p.title}. ${p.body} One trick: pick the smallest piece of the biggest task and do just 15 minutes. Want me to open the Pressure Release room first?`
       : pick([
           "Deadlines can feel like a crowd standing on your chest. Let's shrink it: what's the one task that would make tomorrow feel lighter?",
           'Try writing every task down in the planner, even small ones. Seeing it all usually makes it smaller than it feels.',
@@ -36,7 +36,7 @@ export function ruleReply(text: string, ctx: Context): string {
   if (/sleep|tired|exhausted|insomnia|awake/.test(t)) {
     const s = ctx.insights.find((i) => i.id === 'sleep')
     return s
-      ? `${s.body} Tonight, maybe a screens-down 20 minutes before bed? The Meditation room has a 4-7-8 breath that helps some people drift off.`
+      ? `${s.title}. ${s.body} Tonight, maybe a screens-down 20 minutes before bed? The Meditation room has a 4-7-8 breath that helps some people drift off.`
       : "Rest is part of studying, not a break from it. If your mind is busy at night, try the 4-7-8 breath in the Meditation room."
   }
   if (/sad|lonely|alone|cry|low|down|empty/.test(t))

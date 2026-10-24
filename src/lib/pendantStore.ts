@@ -118,7 +118,7 @@ async function respond(text: string) {
   const ctx = { name: profile?.name, insights: buildInsights({ checkins, tasks, health, habits, usualSleep: profile?.usualSleep }) }
   await db.chat.add({ at: Date.now(), role: 'me', text, source: 'necklace' })
   // A spoken "I feel…" doubles as a hands-free check-in, once a day.
-  if (/\bi(?:'m| am)? (feel|feeling)\b|\bi'?m (so )?(tired|stressed|happy|sad|okay|good)\b/i.test(text) && !checkins.some((c) => c.day === dayKey())) {
+  if (/\bi(?:'m| am)? (feel|feeling)\b|\bi'?m (so )?(tired|exhausted|stressed|anxious|happy|sad|okay|good|fine)\b/i.test(text) && !checkins.some((c) => c.day === dayKey())) {
     await db.checkins.add({ day: dayKey(), at: Date.now(), mood: moodFromText(text), energy: 3, tags: ['pendant'], note: text, via: 'necklace' })
   }
   const history = (await db.chat.orderBy('at').reverse().limit(8).toArray()).reverse()
