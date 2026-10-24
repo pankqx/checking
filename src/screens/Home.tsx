@@ -158,9 +158,9 @@ export default function Home() {
             <p className="display text-2xl leading-tight">Connect a watch, if you like.</p>
           )}
         </Widget>
-        <Widget route="pendant" tint="#1e1b16" kicker="Pendant" art="pendant">
-          <p className="display text-2xl leading-tight">{pendant.status === 'connected' ? pendant.name : 'Talk, hands-free.'}</p>
-          <p className="mt-2 text-sm opacity-75">{pendant.status === 'connected' ? `Connected · ${pendant.battery ?? '–'}%` : 'Pair the MindMirror pendant'}</p>
+        <Widget route="pendant" tint="#1e1b16" kicker="Necklace" art="pendant">
+          <p className="display text-2xl leading-tight">{pendant.name && pendant.status !== 'idle' && pendant.status !== 'error' ? pendant.name : 'Talk, hands-free.'}</p>
+          <p className="mt-2 text-sm opacity-75">{pendant.name && pendant.status !== 'idle' && pendant.status !== 'error' ? `Connected${pendant.battery != null ? ` · ${pendant.battery}%` : ''}` : 'It answers out loud'}</p>
         </Widget>
       </div>
 

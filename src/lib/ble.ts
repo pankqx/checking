@@ -2,6 +2,9 @@
 // macOS and ChromeOS. iOS Safari does not support it (use the Bluefy browser
 // or the import option instead).
 
+import { Op, packOp, parseAudioUp, parseState, UUID, type AudioPacket, type NecklaceEvent } from './necklace/protocol'
+import type { Transport } from './necklace/transfer'
+
 export const bleSupported = () => typeof navigator !== 'undefined' && 'bluetooth' in navigator
 
 /* ------------------------------------------------------------------ */
@@ -43,94 +46,89 @@ export function rmssd(rr: number[]) {
 }
 
 /* ------------------------------------------------------------------ */
-/* MindMirror Pendant (ESP32-S3) custom GATT protocol                  */
+/* MindMirror Necklace v2: see docs/NECKLACE_PROTOCOL.md               */
 /* ------------------------------------------------------------------ */
 
-export const PENDANT = {
-  service: '6e400001-b5a3-f393-e0a9-e50e24dc4d4d',
-  audio: '6e400002-b5a3-f393-e0a9-e50e24dc4d4d', // notify: [seq u16][IMA-ADPCM 4-bit, 16 kHz mono]
-  control: '6e400003-b5a3-f393-e0a9-e50e24dc4d4d', // write: commands to pendant
-  state: '6e400004-b5a3-f393-e0a9-e50e24dc4d4d', // notify: button / battery events
-}
+export { AdpcmDecoder } from './adpcm'
 
-export const PendantCmd = {
-  listening: 0x01, // LED breathes indigo
-  thinking: 0x02, // LED swirls
-  reply: 0x03, // + up to 180 bytes of UTF-8: haptic tap, optional speaker TTS on v2
-  idle: 0x04,
-  calm: 0x05, // 4-7-8 breathing light + haptics for N cycles (next byte)
-}
 
-/* IMA ADPCM decoder: 4:1 compression keeps 16 kHz speech at 64 kbps,
-   well within BLE 2M PHY throughput even on cheap phones. */
-const STEP = [7, 8, 9, 10, 11, 12, 13, 14, 16, 17, 19, 21, 23, 25, 28, 31, 34, 37, 41, 45, 50, 55, 60, 66, 73, 80, 88, 97, 107, 118, 130, 143, 157, 173, 190, 209, 230, 253, 279, 307, 337, 371, 408, 449, 494, 544, 598, 658, 724, 796, 876, 963, 1060, 1166, 1282, 1411, 1552, 1707, 1878, 2066, 2272, 2499, 2749, 3024, 3327, 3660, 4026, 4428, 4871, 5358, 5894, 6484, 7132, 7845, 8630, 9493, 10442, 11487, 12635, 13899, 15289, 16818, 18500, 20350, 22385, 24623, 27086, 29794, 32767]
-const IDX = [-1, -1, -1, -1, 2, 4, 6, 8]
+export interface NecklaceInfo { protocol: number; mtu: number; features: number; volume: number; fw: string }
 
-export class AdpcmDecoder {
-  pred = 0
-  index = 0
-  decode(bytes: Uint8Array): Float32Array {
-    const out = new Float32Array(bytes.length * 2)
-    let o = 0
-    for (const b of bytes) {
-      for (const nib of [b & 0x0f, b >> 4]) {
-        const step = STEP[this.index]
-        let diff = step >> 3
-        if (nib & 4) diff += step
-        if (nib & 2) diff += step >> 1
-        if (nib & 1) diff += step >> 2
-        this.pred += nib & 8 ? -diff : diff
-        this.pred = Math.max(-32768, Math.min(32767, this.pred))
-        this.index = Math.max(0, Math.min(88, this.index + IDX[nib & 7]))
-        out[o++] = this.pred / 32768
-      }
-    }
-    return out
-  }
-}
-
-export interface PendantLink {
+export interface NecklaceLink {
   name: string
-  send: (cmd: number, text?: string) => Promise<void>
+  info: NecklaceInfo
+  transport: Transport
+  send: (op: number, ...args: number[]) => Promise<void>
+  onEvent: (fn: (e: NecklaceEvent) => void) => () => void
+  reconnect: () => Promise<void>
   disconnect: () => void
 }
 
-export async function connectPendant(handlers: {
-  onAudio: (pcm: Float32Array) => void
-  onButton: (pressed: boolean) => void
-  onBattery: (pct: number) => void
-  onGone: () => void
-}): Promise<PendantLink> {
-  const device = await navigator.bluetooth.requestDevice({ filters: [{ services: [PENDANT.service] }, { namePrefix: 'MindMirror' }], optionalServices: [PENDANT.service] })
-  device.addEventListener('gattserverdisconnected', handlers.onGone)
-  const server = await device.gatt!.connect()
-  const svc = await server.getPrimaryService(PENDANT.service)
-  const [audio, control, state] = await Promise.all([svc.getCharacteristic(PENDANT.audio), svc.getCharacteristic(PENDANT.control), svc.getCharacteristic(PENDANT.state)])
-  const dec = new AdpcmDecoder()
-  audio.addEventListener('characteristicvaluechanged', (e) => {
-    const v = (e.target as BluetoothRemoteGATTCharacteristic).value!
-    handlers.onAudio(dec.decode(new Uint8Array(v.buffer, v.byteOffset + 2, v.byteLength - 2)))
-  })
-  state.addEventListener('characteristicvaluechanged', (e) => {
-    const v = (e.target as BluetoothRemoteGATTCharacteristic).value!
-    const kind = v.getUint8(0)
-    if (kind === 0x10) {
-      handlers.onButton(v.getUint8(1) === 1)
-      if (v.getUint8(1) === 1) { dec.pred = 0; dec.index = 0 }
-    }
-    if (kind === 0x20) handlers.onBattery(v.getUint8(1))
-  })
-  await audio.startNotifications()
-  await state.startNotifications()
+export async function connectNecklace(handlers: { onAudio: (p: AudioPacket) => void; onGone: () => void }): Promise<NecklaceLink> {
+  const device = await navigator.bluetooth.requestDevice({ filters: [{ services: [UUID.service] }, { namePrefix: 'MindMirror' }], optionalServices: [UUID.service] })
+  let ctrl!: BluetoothRemoteGATTCharacteristic
+  let down!: BluetoothRemoteGATTCharacteristic
+  let intentional = false
+  const listeners = new Set<(e: NecklaceEvent) => void>()
+  const info: NecklaceInfo = { protocol: 0, mtu: 23, features: 0, volume: 70, fw: '?' }
+
+  // Chrome allows one GATT operation at a time, so every write goes through this queue.
+  let chain: Promise<unknown> = Promise.resolve()
+  const serial = <T,>(f: () => Promise<T>): Promise<T> => {
+    const next = chain.then(f, f)
+    chain = next.catch(() => {})
+    return next
+  }
+
+  const onState = (ev: Event) => {
+    const e = parseState((ev.target as BluetoothRemoteGATTCharacteristic).value!)
+    if (e.type === 'hello') Object.assign(info, { protocol: e.protocol, mtu: e.mtu, features: e.features, volume: e.volume, fw: e.fw })
+    listeners.forEach((f) => f(e))
+  }
+  const onAudio = (ev: Event) => handlers.onAudio(parseAudioUp((ev.target as BluetoothRemoteGATTCharacteristic).value!))
+
+  const waitFor: Transport['waitFor'] = (match, ms) =>
+    new Promise((resolve) => {
+      const off = () => { listeners.delete(fn); clearTimeout(timer) }
+      const fn = (e: NecklaceEvent) => { if (match(e)) { off(); resolve(e) } }
+      const timer = setTimeout(() => { off(); resolve(null) }, ms)
+      listeners.add(fn)
+    })
+
+  const setup = async () => {
+    const server = await device.gatt!.connect()
+    const svc = await server.getPrimaryService(UUID.service)
+    const [audio, c, state] = await Promise.all([svc.getCharacteristic(UUID.audioUp), svc.getCharacteristic(UUID.ctrl), svc.getCharacteristic(UUID.state)])
+    down = await svc.getCharacteristic(UUID.audioDown).catch(() => {
+      throw new Error('This necklace runs old firmware without a speaker. Flash mindmirror_necklace.ino and pair again.')
+    })
+    ctrl = c
+    audio.removeEventListener('characteristicvaluechanged', onAudio)
+    state.removeEventListener('characteristicvaluechanged', onState)
+    audio.addEventListener('characteristicvaluechanged', onAudio)
+    state.addEventListener('characteristicvaluechanged', onState)
+    await audio.startNotifications()
+    await state.startNotifications()
+    const hello = waitFor((e) => e.type === 'hello', 2500)
+    await serial(() => ctrl.writeValueWithResponse(packOp(Op.hello)))
+    if (!(await hello)) throw new Error('The necklace did not answer. Switch it off and on, then pair again.')
+  }
+
+  device.addEventListener('gattserverdisconnected', () => { if (!intentional) handlers.onGone() })
+  await setup()
+
   return {
-    name: device.name ?? 'MindMirror Pendant',
-    send: async (cmd, text) => {
-      const body = text ? new TextEncoder().encode(text).slice(0, 180) : new Uint8Array()
-      const pkt = new Uint8Array(1 + body.length)
-      pkt[0] = cmd
-      pkt.set(body, 1)
-      await control.writeValueWithoutResponse(pkt)
+    name: device.name ?? 'MindMirror necklace',
+    info,
+    transport: {
+      writeCtrl: (b) => serial(() => ctrl.writeValueWithResponse(b as BufferSource)),
+      writeData: (b) => serial(() => down.writeValueWithoutResponse(b as BufferSource)),
+      waitFor,
+      mtu: () => info.mtu,
     },
-    disconnect: () => device.gatt?.disconnect(),
+    send: (op, ...args) => serial(() => ctrl.writeValueWithResponse(packOp(op, ...args))),
+    onEvent: (fn) => { listeners.add(fn); return () => listeners.delete(fn) },
+    reconnect: setup,
+    disconnect: () => { intentional = true; device.gatt?.disconnect() },
   }
 }

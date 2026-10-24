@@ -54,7 +54,7 @@ let timer = 0
 let seq = 0
 
 /** Make the companion say something: caption always, voice if enabled. */
-export function say(text: string, opts: { expression?: Expression; greet?: boolean; voice?: boolean } = {}) {
+export function say(text: string, opts: { expression?: Expression; greet?: boolean; voice?: boolean; durationMs?: number } = {}) {
   const my = ++seq
   clearTimeout(timer)
   const words = text.split(/\s+/).filter(Boolean)
@@ -65,7 +65,7 @@ export function say(text: string, opts: { expression?: Expression; greet?: boole
     set({ state: 'IDLE', word: words.length })
   }
   const wantVoice = (opts.voice ?? state.voice) && typeof window !== 'undefined' && 'speechSynthesis' in window
-  if (!wantVoice) return fakeSpeak(words, my, done)
+  if (!wantVoice) return fakeSpeak(words, my, done, false, opts.durationMs)
 
   const cfg = characters[state.character]
   const u = new SpeechSynthesisUtterance(text)
@@ -96,15 +96,18 @@ export function say(text: string, opts: { expression?: Expression; greet?: boole
   timer = window.setTimeout(done, Math.max(2500, words.length * 520))
 }
 
-function fakeSpeak(words: string[], my: number, done: () => void, keepAlive = false) {
+// Estimated word timing. With durationMs (audio playing elsewhere, e.g. the
+// necklace) the words are spread across that time instead.
+function fakeSpeak(words: string[], my: number, done: () => void, keepAlive = false, durationMs?: number) {
   let i = 0
+  const chars = words.reduce((a, w) => a + w.length + 2, 0)
   const step = () => {
     if (my !== seq) return
     if (i >= words.length) { if (!keepAlive) done(); return }
     mouth.target = 1
     mouth.boundaryAt = performance.now()
     set({ word: i })
-    const ms = 110 + words[i].length * 55
+    const ms = durationMs ? (durationMs * (words[i].length + 2)) / chars : 110 + words[i].length * 55
     i++
     window.setTimeout(step, ms)
   }
