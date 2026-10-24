@@ -1,14 +1,13 @@
 import { motion } from 'framer-motion'
 import type { ReactNode } from 'react'
 import { go, type Route } from '../lib/nav'
+import { usePageMotion } from './fx'
 
 export function Screen({ title, kicker, children, back = 'home', tint }: { title: ReactNode; kicker?: string; children: ReactNode; back?: Route | null; tint?: string }) {
+  const pm = usePageMotion()
   return (
     <motion.main
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -8 }}
-      transition={{ duration: 0.35, ease: [0.2, 0.8, 0.2, 1] }}
+      {...pm}
       className="mx-auto max-w-xl px-4 pt-6 pb-32"
       style={tint ? { background: `radial-gradient(120% 40% at 50% 0%, color-mix(in oklab, ${tint} 18%, transparent), transparent)` } : undefined}
     >

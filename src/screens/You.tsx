@@ -1,5 +1,9 @@
 import { useState } from 'react'
+import { ModeToggle } from '../components/fx'
 import { Screen, Section } from '../components/ui'
+import { characters } from '../character/characters'
+import { InkCharacter } from '../character/InkCharacter'
+import { say, setCharacter, setVoice, useBuddy } from '../lib/buddy'
 import { db, wipeEverything } from '../lib/db'
 import { go } from '../lib/nav'
 import { seedDemo } from '../lib/seed'
@@ -10,6 +14,7 @@ const readTheme = (): Theme => { try { return (localStorage.getItem('mm-theme') 
 
 export default function You() {
   const d = useData()
+  const b = useBuddy()
   const [theme, setTheme] = useState<Theme>(readTheme)
   const applyTheme = (t: Theme) => {
     setTheme(t)
@@ -40,7 +45,23 @@ export default function You() {
         </div>
       </div>
 
-      <Section title="Look">
+      <Section title="Your companion">
+        <div className="grid grid-cols-2 gap-3">
+          {Object.values(characters).map((c) => (
+            <button key={c.id} onClick={() => { setCharacter(c.id); setTimeout(() => say(`Hi! It’s ${c.name}. I’m here whenever you need me.`, { greet: true, expression: 'happy' }), 50) }} className={`card overflow-hidden p-0 text-left ${b.character === c.id ? 'ring-2 ring-sindoor' : ''}`}>
+              <div className="flex h-44 justify-center overflow-hidden bg-paper-2"><InkCharacter config={c} state={b.character === c.id ? b.state : 'IDLE'} expression={b.character === c.id ? b.expression : 'neutral'} height={260} track={false} /></div>
+              <div className="p-3"><p className="font-semibold">{c.name}</p><p className="text-xs text-ink-faint">{c.tagline}</p></div>
+            </button>
+          ))}
+        </div>
+        <button className="chip mt-3" aria-pressed={b.voice} onClick={() => setVoice(!b.voice)}>{b.voice ? '🔊 Speaks out loud' : '🔈 Captions only'}</button>
+      </Section>
+
+      <Section title="World">
+        <ModeToggle />
+      </Section>
+
+      <Section title="Day or night paper">
         <div className="flex gap-2">{(['auto', 'light', 'dark'] as Theme[]).map((t) => <button key={t} className="chip flex-1 capitalize" aria-pressed={theme === t} onClick={() => applyTheme(t)}>{t === 'auto' ? 'Match phone' : t === 'light' ? 'Day paper' : 'Night ink'}</button>)}</div>
       </Section>
 

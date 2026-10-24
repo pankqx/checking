@@ -33,7 +33,7 @@ export default function Insights() {
 
   return (
     <Screen title={<>What&rsquo;s <span className="display-i text-sindoor">changed</span>?</>} kicker="insights · you vs your normal">
-      <div className="card flex items-center gap-4 overflow-hidden p-5" style={{ background: 'var(--neel)', color: '#f3eee4', borderColor: 'transparent' }}>
+      <div className="card flex items-center gap-4 overflow-hidden p-5" style={{ background: 'linear-gradient(135deg, #2e3a8c, #5b3fa8 70%, #8a3f7a)', color: '#f3eee4', borderColor: 'transparent' }}>
         <Orb mood={d.lastMood} size={96} face={false} />
         <div>
           <p className="text-[11px] font-bold uppercase tracking-[0.2em] opacity-70">Mind weather</p>

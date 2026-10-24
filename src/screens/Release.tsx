@@ -1,7 +1,10 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import { useEffect, useRef, useState } from 'react'
+import { BuddyBadge, Caption } from '../components/Buddy'
 import { Doodle, Screen } from '../components/ui'
+import { characters, pick } from '../character/characters'
 import { pop } from '../lib/audio'
+import { getBuddy, say, setFace } from '../lib/buddy'
 import { db } from '../lib/db'
 
 // Pressure release room: four small, physical ways to let stress out.
@@ -18,12 +21,17 @@ const TOOLS: { id: Tool; name: string; line: string; color: string; art: 'grid' 
 export default function Release() {
   const [tool, setTool] = useState<Tool>(() => (sessionStorage.getItem('mm-shred') ? 'shred' : 'bubbles'))
   const started = useRef(Date.now())
+  useEffect(() => {
+    say('This room is for letting it out. Pop, shred, shout or scribble. Nobody’s watching, I promise.', { expression: 'happy' })
+    return () => setFace('neutral')
+  }, [])
   useEffect(() => () => {
     const m = (Date.now() - started.current) / 60000
     if (m > 0.2) db.sessions.add({ at: Date.now(), room: 'release', activity: 'release', minutes: Math.round(m * 10) / 10 })
   }, [])
   return (
     <Screen title={<>Let it <span className="display-i text-sindoor">out</span>.</>} kicker="pressure release room" tint="var(--sindoor)">
+      <div className="mb-4 flex items-start gap-3"><BuddyBadge size={56} /><Caption className="flex-1" /></div>
       <div className="snap-row -mx-4">
         {TOOLS.map((t) => (
           <button key={t.id} onClick={() => setTool(t.id)} className={`relative flex h-32 w-40 flex-col justify-end overflow-hidden rounded-3xl p-4 text-left transition ${tool === t.id ? 'ring-2 ring-ink' : 'opacity-75'}`} style={{ background: t.color, color: '#1e1b16' }}>
@@ -43,6 +51,8 @@ export default function Release() {
   )
 }
 
+const cheer = () => say(pick(characters[getBuddy().character].cheer), { expression: 'happy' })
+
 function Bubbles() {
   const [popped, setPopped] = useState<Set<number>>(new Set())
   const [round, setRound] = useState(0)
@@ -53,6 +63,7 @@ function Bubbles() {
     navigator.vibrate?.(12)
     const next = new Set(popped).add(i)
     setPopped(next)
+    if (next.size % 14 === 0) cheer()
     if (next.size === n) setTimeout(() => { setPopped(new Set()); setRound((r) => r + 1) }, 700)
   }
   return (
@@ -79,6 +90,7 @@ function Shredder() {
     setText('')
     navigator.vibrate?.([30, 40, 30, 40, 30, 40, 80])
     setTimeout(() => setShredding(null), 2600)
+    setTimeout(() => say('Gone. Shredded. It doesn’t get to sit in your head for free anymore.', { expression: 'happy' }), 1800)
   }
   const strips = 9
   return (
@@ -135,7 +147,9 @@ function ShoutJar() {
       alert('Microphone not available.')
     }
   }
-  useEffect(() => { if (fill >= 100) { stop.current(); navigator.vibrate?.([100, 60, 100]) } }, [fill])
+  useEffect(() => {
+    if (fill >= 100) { stop.current(); navigator.vibrate?.([100, 60, 100]); say('Whoa! Jar full. That was loud and that was brave.', { expression: 'surprised' }) }
+  }, [fill])
   return (
     <div className="card flex flex-col items-center p-6">
       <svg viewBox="0 0 120 160" width="150" height="200" aria-hidden>
@@ -191,6 +205,7 @@ function Scribble() {
   }
   const wipe = () => {
     setFade(true)
+    cheer()
     setTimeout(() => {
       const c = ref.current!
       c.getContext('2d')!.clearRect(0, 0, c.width, c.height)

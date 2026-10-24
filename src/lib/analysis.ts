@@ -222,7 +222,7 @@ export function weather(ss: Signal[]): Weather {
   if (score <= 1) return { score, name: 'Clear skies', line: 'Nothing unusual compared with your normal.', rung: 0 }
   if (score <= 3) return { score, name: 'A few clouds', line: 'A couple of things have shifted. Small adjustments help most now.', rung: 0 }
   if (score <= 5) return { score, name: 'Overcast', line: 'Several signals moved together. This is a good time to lean on someone.', rung: 1 }
-  return { score, name: 'Storm building', line: 'A lot has shifted at once. Talking to a counsellor early really helps.', rung: 2 }
+  return { score, name: 'Heavy skies', line: 'A lot has shifted at once. Talking to a counsellor early really helps.', rung: 2 }
 }
 
 export const LADDER = [

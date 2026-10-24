@@ -1,6 +1,8 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import { useEffect, useRef, useState } from 'react'
+import { Buddy } from '../components/Buddy'
 import { chime, playScape, stopScape, type Scape } from '../lib/audio'
+import { hush, say, setFace, useBuddy } from '../lib/buddy'
 import { db } from '../lib/db'
 import { go } from '../lib/nav'
 import { sendCalm, usePendant } from '../lib/pendantStore'
@@ -29,6 +31,12 @@ export default function Meditation() {
   const watch = useWatch()
   const pendant = usePendant()
   const startedAt = useRef(0)
+  const buddy = useBuddy()
+
+  useEffect(() => {
+    const t = setTimeout(() => say('Welcome to the quiet room. Pick a rhythm and a sound, and I’ll breathe with you.', { expression: 'calm' }), 400)
+    return () => { clearTimeout(t); hush(); setFace('neutral') }
+  }, [])
 
   const phases = PATTERNS[pattern].phases
   const [label, secs] = phases[phase % phases.length]
@@ -38,6 +46,9 @@ export default function Meditation() {
   useEffect(() => {
     if (!running) return
     navigator.vibrate?.(label === 'Hold' ? 20 : 60)
+    // she guides the first two cycles out loud, then lets you breathe in silence
+    if (phase < phases.length * 2) say(label === 'Hold' ? 'Hold…' : `${label}…`, { expression: 'calm' })
+    else if (buddy.line) setFace('calm', 'IDLE')
     const t = setTimeout(() => setPhase((p) => p + 1), secs * 1000)
     return () => clearTimeout(t)
   }, [running, phase, label, secs])
@@ -68,6 +79,7 @@ export default function Meditation() {
     setRunning(false)
     stopScape()
     chime(528)
+    say(complete ? 'Beautiful. Notice how you feel right now. Carry a little of this with you.' : 'That’s okay. Even a minute counts.', { expression: 'happy' })
     const m = Math.max(0.5, (Date.now() - startedAt.current) / 60000)
     await db.sessions.add({ at: Date.now(), room: 'meditation', activity: PATTERNS[pattern].name, minutes: Math.round(m * 10) / 10 })
     setFinished({ mins: complete ? mins : Math.round(m * 10) / 10, hrDrop: hrStart && watch.bpm ? hrStart - watch.bpm : undefined })
@@ -86,20 +98,24 @@ export default function Meditation() {
           <span className="w-10 text-right text-sm tabular-nums opacity-70">{watch.bpm ? `♥ ${watch.bpm}` : ''}</span>
         </div>
 
-        <div className="relative my-6 grid flex-1 place-items-center">
+        <div className="relative my-4 flex flex-1 flex-col items-center justify-center">
           <motion.div
             className="absolute rounded-full"
             style={{ background: 'radial-gradient(circle, rgba(236,116,88,.55), rgba(140,152,238,.15) 60%, transparent 70%)' }}
             animate={{ width: running ? (inhale ? 330 : exhale ? 150 : undefined) : 220, height: running ? (inhale ? 330 : exhale ? 150 : undefined) : 220 }}
             transition={{ duration: running ? secs : 1.5, ease: 'easeInOut' }}
           />
-          <Lotus open={running ? (inhale ? 1 : exhale ? 0 : undefined) : 0.4} dur={running ? secs : 1.5} />
-          <div className="absolute bottom-0 text-center">
+          <div className="relative flex flex-col items-center">
+            <Buddy height={300} track={!running} />
+            <div className="-mt-20"><Lotus open={running ? (inhale ? 1 : exhale ? 0 : undefined) : 0.4} dur={running ? secs : 1.5} /></div>
+          </div>
+          <div className="mt-3 text-center">
             <AnimatePresence mode="wait">
               <motion.p key={running ? `${phase}` : finished ? 'done' : 'idle'} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="display-i text-3xl">
                 {running ? label : finished ? 'Well done.' : 'Settle in.'}
               </motion.p>
             </AnimatePresence>
+            {!running && buddy.line && <p className="mx-auto mt-1 max-w-xs text-sm opacity-70">{buddy.line}</p>}
             {running && <p className="mt-1 text-sm tabular-nums opacity-60">{Math.floor(left / 60)}:{String(left % 60).padStart(2, '0')}</p>}
             {finished && (
               <p className="mt-1 text-sm opacity-75">
@@ -133,7 +149,7 @@ const Pill = ({ on, onClick, children }: { on: boolean; onClick: () => void; chi
 function Lotus({ open, dur }: { open?: number; dur: number }) {
   const petals = [-60, -30, 0, 30, 60]
   return (
-    <svg viewBox="-100 -100 200 200" width="230" height="230" className="relative" aria-hidden>
+    <svg viewBox="-100 -100 200 200" width="120" height="120" className="relative" aria-hidden>
       {petals.map((a, i) => (
         <motion.path
           key={a}

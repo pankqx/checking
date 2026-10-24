@@ -1,13 +1,16 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useEffect, useRef, useState } from 'react'
-import { Orb } from '../components/Orb'
+import { Buddy, Caption } from '../components/Buddy'
+import { usePageMotion } from '../components/fx'
+import { characters } from '../character/characters'
 import { isCrisis } from '../lib/analysis'
 import { llmReady, llmReply, loadLLM, ruleReply, webgpuSupported } from '../lib/companion'
+import { getBuddy, hush, say, setCharState, useBuddy } from '../lib/buddy'
 import { db } from '../lib/db'
 import { go } from '../lib/nav'
 import { useData } from '../lib/useData'
-import { recordMic, speak, transcribe } from '../lib/voice'
+import { recordMic, transcribe } from '../lib/voice'
 import { MicIcon } from './CheckIn'
 
 const STARTERS = ['What changed this week?', "I can't sleep", 'Too many deadlines', 'I feel kind of alone', 'Something good happened!']
@@ -19,7 +22,10 @@ export default function Companion() {
   const [busy, setBusy] = useState(false)
   const [llm, setLlm] = useState<{ p: number; t: string } | null>(llmReady() ? { p: 1, t: 'ready' } : null)
   const [rec, setRec] = useState<Awaited<ReturnType<typeof recordMic>> | null>(null)
-  const [talkBack, setTalkBack] = useState(false)
+  const b = useBuddy()
+  const pm = usePageMotion()
+  const cfg = characters[b.character]
+  useEffect(() => () => hush(), [])
   const end = useRef<HTMLDivElement>(null)
   useEffect(() => {
     end.current?.scrollIntoView({ behavior: 'smooth' })
@@ -31,17 +37,18 @@ export default function Companion() {
     setText('')
     await db.chat.add({ at: Date.now(), role: 'me', text: t.trim() })
     setBusy(true)
+    setCharState('THINKING')
     const history = [...msgs, { role: 'me' as const, text: t.trim(), at: Date.now() }]
     const reply = llmReady() ? await llmReply(history, ctx) : ruleReply(t, ctx)
     await new Promise((r) => setTimeout(r, llmReady() ? 0 : 450))
     await db.chat.add({ at: Date.now(), role: 'mirror', text: reply, source: llmReady() ? 'llm' : 'rules' })
     setBusy(false)
-    if (talkBack) speak(reply)
+    say(reply, { expression: isCrisis(t) ? 'concerned' : /love|great|proud|good|happy|yay|brighter/i.test(reply) ? 'happy' : /heavy|sorry|alone|hard|rough/i.test(reply) ? 'concerned' : 'neutral' })
   }
 
   const mic = async () => {
     if (!rec) {
-      try { setRec(await recordMic()) } catch { alert('Microphone not available') }
+      try { setRec(await recordMic()); setCharState('LISTENING') } catch { alert('Microphone not available') }
       return
     }
     const r = rec
@@ -64,21 +71,23 @@ export default function Companion() {
   }
 
   return (
-    <motion.main initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="mx-auto flex min-h-dvh max-w-xl flex-col px-4 pb-44 pt-6">
-      <header className="flex items-center gap-3">
-        <Orb mood={d.lastMood} size={56} />
-        <div className="flex-1">
-          <h1 className="display text-3xl leading-none">Mirror</h1>
-          <p className="text-xs text-ink-faint">{llm?.p === 1 ? 'On-device AI (Qwen 2.5) · private' : 'Built-in companion · private · offline'}</p>
+    <motion.main {...pm} className="mx-auto flex min-h-dvh max-w-xl flex-col px-4 pb-44 pt-6">
+      <header className="flex items-center justify-between">
+        <div>
+          <h1 className="display text-3xl leading-none">{cfg.name}</h1>
+          <p className="text-xs text-ink-faint">{llm?.p === 1 ? 'On-device AI (Qwen 2.5) · private' : 'Built-in companion · private · offline'} · {b.state.toLowerCase()}</p>
         </div>
-        <button className={`chip text-xs ${talkBack ? '' : 'opacity-60'}`} aria-pressed={talkBack} onClick={() => setTalkBack(!talkBack)}>🔊 voice</button>
+        <div className="flex gap-2">
+          {!llm && webgpuSupported() && <button className="chip text-xs" onClick={enableLLM} title="Download a small AI model (~1 GB, once) that runs on your device. Your words never leave it.">⚡ smarter AI</button>}
+          <button className="chip text-xs" onClick={() => go('you')}>switch</button>
+        </div>
       </header>
+      <section className="relative mt-2 flex flex-col items-center">
+        {b.ui === 'grandeur' && <div className="absolute top-10 -z-10 size-72 rounded-full" style={{ background: 'radial-gradient(closest-side, rgba(167,139,250,.45), transparent)' }} />}
+        <Buddy height={b.ui === 'grandeur' ? 380 : 300} />
+        <div className="-mt-4 w-full"><Caption fallback={`Hey${d.profile?.name ? ` ${d.profile.name}` : ''}. What’s on your mind? I won’t diagnose, I’m a mirror for your own patterns.`} tail="none" /></div>
+      </section>
 
-      {!llm && webgpuSupported() && (
-        <button onClick={enableLLM} className="card mt-4 p-4 text-left text-sm">
-          <b>Make me smarter, privately.</b> <span className="text-ink-soft">Download a small AI model (~1 GB, once) that runs on your device. Your words never leave it.</span>
-        </button>
-      )}
       {llm && llm.p < 1 && (
         <div className="card mt-4 p-4 text-sm">
           <div className="h-2 overflow-hidden rounded-full bg-paper-2"><motion.div className="h-full bg-neel" animate={{ width: `${llm.p * 100}%` }} /></div>
@@ -87,12 +96,6 @@ export default function Companion() {
       )}
 
       <div className="mt-6 flex-1 space-y-3">
-        {!msgs.length && (
-          <div className="py-6 text-center">
-            <p className="display-i text-2xl">Hey{d.profile?.name ? ` ${d.profile.name}` : ''}. What&rsquo;s on your mind?</p>
-            <p className="mt-2 text-sm text-ink-faint">I&rsquo;m not a therapist and I won&rsquo;t diagnose. I&rsquo;m a mirror for your own patterns.</p>
-          </div>
-        )}
         <AnimatePresence initial={false}>
           {msgs.map((m) => (
             <motion.div key={m.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className={`flex ${m.role === 'me' ? 'justify-end' : ''}`}>
@@ -117,7 +120,7 @@ export default function Companion() {
             <button className="chip whitespace-nowrap text-sm" onClick={() => go('insights')}>Show my data →</button>
           </div>
           <form onSubmit={(e) => { e.preventDefault(); send(text) }} className="flex items-center gap-2 rounded-full border border-line bg-card p-1.5 pl-5 shadow-[var(--shadow)]">
-            <input value={text} onChange={(e) => setText(e.target.value)} placeholder={rec ? 'Listening… tap mic to stop' : 'Say anything'} className="flex-1 bg-transparent outline-none" />
+            <input value={text} onChange={(e) => setText(e.target.value)} onFocus={() => getBuddy().state === 'IDLE' && setCharState('LISTENING')} onBlur={() => getBuddy().state === 'LISTENING' && setCharState('IDLE')} placeholder={rec ? 'Listening… tap mic to stop' : 'Say anything'} className="flex-1 bg-transparent outline-none" />
             <button type="button" onClick={mic} className={`grid size-10 place-items-center rounded-full ${rec ? 'animate-pulse bg-sindoor text-white' : 'bg-paper-2'}`} aria-label="Speak"><MicIcon /></button>
             <button className="grid size-10 place-items-center rounded-full bg-ink text-paper" aria-label="Send" disabled={busy}>↑</button>
           </form>

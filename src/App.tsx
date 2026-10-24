@@ -1,5 +1,6 @@
 import { AnimatePresence } from 'framer-motion'
 import { useLiveQuery } from 'dexie-react-hooks'
+import { Atmosphere } from './components/fx'
 import { db } from './lib/db'
 import { go, useRoute, type Route } from './lib/nav'
 import Onboarding from './screens/Onboarding'
@@ -24,11 +25,12 @@ export default function App() {
   const route = useRoute()
   const profile = useLiveQuery(() => db.profile.get('me').then((p) => p ?? null), [])
   if (profile === undefined) return null
-  if (!profile?.onboardedAt) return <Onboarding />
+  if (!profile?.onboardedAt) return <><Atmosphere /><Onboarding /></>
   const S = SCREENS[route] ?? Home
   const immersive = route === 'meditation'
   return (
     <>
+      <Atmosphere />
       <AnimatePresence mode="wait">
         <S key={route} />
       </AnimatePresence>

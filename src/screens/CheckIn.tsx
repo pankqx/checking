@@ -1,6 +1,9 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import { useEffect, useRef, useState } from 'react'
+import { BuddyBadge, Caption } from '../components/Buddy'
 import { Orb } from '../components/Orb'
+import { characters, pick } from '../character/characters'
+import { getBuddy, say, setFace } from '../lib/buddy'
 import { Screen } from '../components/ui'
 import { isCrisis } from '../lib/analysis'
 import { HELPLINE } from '../lib/companion'
@@ -26,6 +29,19 @@ export default function CheckIn() {
   const rec = useRef<Awaited<ReturnType<typeof recordMic>> | null>(null)
   const [elapsed, setElapsed] = useState(0)
 
+  const chooseMood = (m: number) => {
+    setMood(m)
+    const c = characters[getBuddy().character]
+    if (m <= 2) say(pick(c.comfort), { expression: 'concerned' })
+    else if (m >= 4) say(pick(c.cheer).replace('That’s the spirit.', 'Love that!'), { expression: 'happy' })
+    else say('Okay is okay. Thanks for checking in.', { expression: 'neutral' })
+  }
+
+  useEffect(() => {
+    say('How’s your mind right now? Just tap a face. No wrong answers.', { expression: 'neutral' })
+    return () => setFace('neutral')
+  }, [])
+
   useEffect(() => {
     db.profile.get('me').then((p) => p?.usualSleep && setSleep(p.usualSleep))
     const t = setInterval(() => setElapsed(Math.round((Date.now() - started.current) / 1000)), 1000)
@@ -34,7 +50,9 @@ export default function CheckIn() {
 
   const save = async () => {
     await db.checkins.add({ day: dayKey(), at: Date.now(), mood: mood ?? 3, energy, stress, sleep, social, tags, note: note || undefined, via: voice === 'idle' && !note ? 'tap' : 'voice' })
-    setDone(Math.round((Date.now() - started.current) / 1000))
+    const secs = Math.round((Date.now() - started.current) / 1000)
+    setDone(secs)
+    say(isCrisis(note) ? 'I’m really glad you told me. Please talk to someone today. Tele-MANAS is free on 14416, any time.' : `Saved, in just ${secs} seconds. Thank you for checking in with yourself.`, { expression: isCrisis(note) ? 'concerned' : 'happy' })
   }
 
   const toggleVoice = async () => {
@@ -63,7 +81,8 @@ export default function CheckIn() {
     return (
       <Screen title={<>Saved. <span className="display-i text-sindoor">Thank you.</span></>} kicker="check-in">
         <div className="flex flex-col items-center text-center">
-          <Orb mood={mood ?? 3} size={220} />
+          <Orb mood={mood ?? 3} size={200} />
+          <div className="mt-2 flex w-full items-start gap-3 text-left"><BuddyBadge size={56} /><Caption className="flex-1" /></div>
           <p className="display mt-4 text-6xl">{done}s</p>
           <p className="text-ink-soft">That&rsquo;s all it took. Small daily notes are how I learn your normal.</p>
           {isCrisis(note) && <div className="card mt-6 border-sindoor p-5 text-left"><p className="font-semibold text-sindoor">Please don&rsquo;t carry this alone</p><p className="mt-1 text-sm">{HELPLINE}</p><a href="tel:14416" className="btn mt-4 bg-sindoor">Call Tele-MANAS 14416</a></div>}
@@ -77,10 +96,11 @@ export default function CheckIn() {
 
   return (
     <Screen title={<>How&rsquo;s your <span className="display-i text-sindoor">mind</span>?</>} kicker={`check-in · ${elapsed}s`}>
+      <div className="mb-5 flex items-start gap-3"><BuddyBadge size={60} /><Caption className="flex-1" /></div>
       {/* Mood: tap an orb */}
       <div className="grid grid-cols-5 gap-1">
         {MOODS.map((m, i) => (
-          <button key={m} onClick={() => setMood(i + 1)} className={`flex flex-col items-center rounded-3xl py-2 transition ${mood === i + 1 ? 'bg-card shadow-[var(--shadow)]' : 'opacity-60'}`} aria-pressed={mood === i + 1}>
+          <button key={m} onClick={() => chooseMood(i + 1)} className={`flex flex-col items-center rounded-3xl py-2 transition ${mood === i + 1 ? 'bg-card shadow-[var(--shadow)]' : 'opacity-60'}`} aria-pressed={mood === i + 1}>
             <Orb mood={i + 1} size={58} speed={mood === i + 1 ? 2 : 0.6} />
             <span className="text-xs font-semibold">{m}</span>
           </button>
