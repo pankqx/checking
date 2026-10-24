@@ -1,0 +1,146 @@
+@import "tailwindcss";
+
+/*
+  MindMirror visual language — "Paper & Pigment"
+  Warm handmade paper, ink line-work, and five Indian pigments.
+  Every colour is a token so the night palette is a swap, not a rewrite.
+*/
+:root {
+  --paper: #f3eee4;
+  --paper-2: #e9e1d2;
+  --card: #fbf8f2;
+  --ink: #1e1b16;
+  --ink-soft: #5d564b;
+  --ink-faint: #9a9284;
+  --line: #d9cfbd;
+  --sindoor: #d2553a;   /* terracotta red, warmth, action */
+  --haldi: #e3a935;     /* turmeric, joy */
+  --neel: #2e3a8c;      /* indigo, calm, depth */
+  --pista: #8aa57f;     /* sage, growth */
+  --gulabi: #e8b4a4;    /* blush, softness */
+  --shadow: 0 1px 0 rgba(30, 27, 22, 0.04), 0 12px 30px -18px rgba(30, 27, 22, 0.35);
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #16151a;
+    --paper-2: #201e25;
+    --card: #1d1b22;
+    --ink: #f1ebe0;
+    --ink-soft: #b9b0a2;
+    --ink-faint: #7b7469;
+    --line: #34313a;
+    --sindoor: #ec7458;
+    --haldi: #efbd55;
+    --neel: #8c98ee;
+    --pista: #9fbc93;
+    --gulabi: #d79a89;
+    --shadow: 0 1px 0 rgba(0, 0, 0, 0.2), 0 14px 34px -18px rgba(0, 0, 0, 0.8);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #16151a;
+  --paper-2: #201e25;
+  --card: #1d1b22;
+  --ink: #f1ebe0;
+  --ink-soft: #b9b0a2;
+  --ink-faint: #7b7469;
+  --line: #34313a;
+  --sindoor: #ec7458;
+  --haldi: #efbd55;
+  --neel: #8c98ee;
+  --pista: #9fbc93;
+  --gulabi: #d79a89;
+  --shadow: 0 1px 0 rgba(0, 0, 0, 0.2), 0 14px 34px -18px rgba(0, 0, 0, 0.8);
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-paper-2: var(--paper-2);
+  --color-card: var(--card);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-faint: var(--ink-faint);
+  --color-line: var(--line);
+  --color-sindoor: var(--sindoor);
+  --color-haldi: var(--haldi);
+  --color-neel: var(--neel);
+  --color-pista: var(--pista);
+  --color-gulabi: var(--gulabi);
+  --font-display: "Fraunces", Georgia, serif;
+  --font-sans: "Manrope", system-ui, sans-serif;
+}
+
+html, body, #root { min-height: 100%; }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* paper grain */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 100;
+  opacity: 0.35;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.45 0 0 0 0 0.4 0 0 0 0 0.32 0 0 0 .18 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) body::before { mix-blend-mode: screen; opacity: 0.12; } }
+:root[data-theme="dark"] body::before { mix-blend-mode: screen; opacity: 0.12; }
+
+.display { font-family: var(--font-display); font-variation-settings: "SOFT" 100, "opsz" 96; letter-spacing: -0.02em; }
+.display-i { font-family: var(--font-display); font-style: italic; font-variation-settings: "SOFT" 100, "opsz" 96; }
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 28px;
+  box-shadow: var(--shadow);
+}
+
+.chip {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.55rem 1rem;
+  font-size: 0.9rem;
+  background: var(--card);
+  transition: all 0.2s ease;
+}
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: .5rem;
+  border-radius: 999px; padding: 0.85rem 1.4rem; font-weight: 600;
+  background: var(--ink); color: var(--paper);
+  transition: transform .15s ease, opacity .2s;
+}
+.btn:active { transform: scale(0.97); }
+.btn:disabled { opacity: .4; }
+.btn-ghost { background: transparent; color: var(--ink-soft); border: 1px solid var(--line); }
+
+.snap-row {
+  display: flex; gap: 14px; overflow-x: auto; scroll-snap-type: x mandatory;
+  padding: 4px 16px 18px; scrollbar-width: none; overscroll-behavior-x: contain;
+}
+.snap-row::-webkit-scrollbar { display: none; }
+.snap-row > * { scroll-snap-align: start; flex: 0 0 auto; }
+
+/* hand-drawn underline */
+.squiggle {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='8' viewBox='0 0 40 8'><path d='M0 4 Q5 0 10 4 T20 4 T30 4 T40 4' fill='none' stroke='%23D2553A' stroke-width='1.6'/></svg>");
+  background-repeat: repeat-x; background-position: 0 100%; background-size: 20px 6px; padding-bottom: 4px;
+}
+
+input[type="range"] { accent-color: var(--sindoor); }
+textarea, input { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--neel); outline-offset: 3px; border-radius: 12px; }
