@@ -35,7 +35,7 @@ export default function Planner() {
   }
 
   return (
-    <Screen title={<>Plan, <span className="display-i text-sindoor">kindly</span>.</>} kicker="to-do · planner · habits">
+    <Screen title={<>Plan, <span className="display-i text-accent">kindly</span>.</>} kicker="to-do · planner · habits">
       <div className="card p-4">
         <input value={title} onChange={(e) => setTitle(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && add()} placeholder="Add a task, e.g. Lab report" className="w-full bg-transparent text-lg outline-none" />
         <div className="mt-3 grid grid-cols-3 gap-2 text-sm">
@@ -53,10 +53,10 @@ export default function Planner() {
       <Section title="PressureMap">
         <div className="space-y-2">
           {pm.filter((p) => p.tasks.length).map((p) => (
-            <div key={p.day} className="card rounded-3xl p-4" style={p.gap >= 2 ? { borderColor: 'var(--sindoor)' } : undefined}>
+            <div key={p.day} className="card rounded-3xl p-4" style={p.gap >= 2 ? { borderColor: 'var(--care)' } : undefined}>
               <div className="flex items-center justify-between">
                 <p className="font-semibold">{label(p.day)}</p>
-                {p.gap >= 2 ? <Stamp>{p.gap} h unplanned</Stamp> : <Stamp color="var(--pista)">fits</Stamp>}
+                {p.gap >= 2 ? <Stamp color="var(--care)">{p.gap} h unplanned</Stamp> : <Stamp color="var(--pista)">fits</Stamp>}
               </div>
               <div className="mt-2 h-2 overflow-hidden rounded-full bg-paper-2">
                 <div className="h-full rounded-full bg-neel" style={{ width: `${Math.min(100, (p.planned / Math.max(p.due, 0.1)) * 100)}%` }} />
@@ -67,7 +67,7 @@ export default function Planner() {
                   <li key={t.id} className="flex items-center gap-3">
                     <button onClick={() => db.tasks.update(t.id!, { done: true })} className="size-5 shrink-0 rounded-md border-2 border-ink" aria-label="Mark done" />
                     <span className="flex-1">{t.title} <span className="text-xs text-ink-faint">{t.hours} h</span></span>
-                    {p.gap >= 2 && <button onClick={() => moveLater(t.id!, t.due)} className="text-xs text-sindoor underline underline-offset-2">move +1 day</button>}
+                    {p.gap >= 2 && <button onClick={() => moveLater(t.id!, t.due)} className="text-xs text-(--care-ink) underline underline-offset-2">move +1 day</button>}
                   </li>
                 ))}
               </ul>
@@ -83,7 +83,7 @@ export default function Planner() {
             {overdue.map((t) => (
               <li key={t.id} className="flex items-center gap-3 text-sm">
                 <span className="flex-1">{t.title}</span>
-                <button className="text-sindoor underline" onClick={() => db.tasks.update(t.id!, { due: dayKey(Date.now() + 86400000) })}>tomorrow</button>
+                <button className="text-accent underline" onClick={() => db.tasks.update(t.id!, { due: dayKey(Date.now() + 86400000) })}>tomorrow</button>
                 <button className="text-ink-faint underline" onClick={() => db.tasks.update(t.id!, { done: true })}>done</button>
               </li>
             ))}

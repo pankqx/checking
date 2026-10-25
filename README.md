@@ -19,7 +19,11 @@ The six signals combine into **mind weather** (Clear skies → Heavy skies), whi
 
 ## Features
 
-- **Two worlds**: *Minimal* (paper, ink and Indian pigments) and *Grandeur* (night garden: aurora, fireflies, glass, iris page reveals, 3D coverflow). Switch from the home header.
+- **Calm by design ("Sukoon")**: indigo, sage, sky and dawn tones; red is kept for urgent help only, and a signal that needs attention is shown as "needs care" in soft coral. Motion follows one slow breath (10 s: 4 in, 6 out), and screens change with a quiet fade.
+- **Two worlds**: *Minimal* (paper, ink and Indian pigments) and *Grandeur* (night garden: aurora, fireflies, glass, 3D coverflow). Switch from the home header.
+- **Diagrams that calm**: mind weather as a view through a jharokha window (clear, clouds, soft rain; dawn, day, dusk or night), the six signals as a lotus, the support ladder as stepping stones across a stream, a breathing clock in the meditation room, and leaves on a stream for thoughts you let go.
+- **Calm the sea (opening moment)**: the app opens on a storm of noisy ASCII. Tap five glowing balls and each one sends out a ring of calm until the screen settles into moonlit ASCII waves that roll in at breathing pace, with soft chimes and ocean sound. Skip any time; turn it off in You.
+- **Calm play room**: *Ripples* (an ASCII koi pond: tap or trail a finger, or turn on gentle rain) and *Zen garden* (rake ASCII sand, tap to set stones with rings, smooth it any time). No scores, no timers, no way to lose.
 - **Talking companions, Reenu and Roman**: the ink characters from [pank-os](https://github.com/pankqx/pank-os), now with lip-sync to their voice (speech word boundaries), waving, blinking, gaze, and happy / concerned / calm / surprised faces. Karaoke captions for every line.
 - **Soft onboarding**: one gentle question at a time, each one skippable, asked out loud by the companion.
 - **30-second check-in** by tap or voice (on-device Whisper).

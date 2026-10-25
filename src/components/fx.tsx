@@ -28,8 +28,8 @@ function Fireflies() {
     const resize = () => { c.width = innerWidth * dpr; c.height = innerHeight * dpr }
     resize()
     addEventListener('resize', resize)
-    const N = innerWidth < 600 ? 38 : 70
-    const colors = ['#5eead4', '#a78bfa', '#fbbf24', '#fb7185', '#f3f0ff']
+    const N = innerWidth < 600 ? 26 : 48
+    const colors = ['#9fd3b4', '#aea3d4', '#f2cd7a', '#a9c3f0', '#f3f0ff']
     const flies = Array.from({ length: N }, () => ({ x: Math.random(), y: Math.random(), r: 0.6 + Math.random() * 1.8, p: Math.random() * 6.28, s: 0.2 + Math.random() * 0.6, c: colors[Math.floor(Math.random() * colors.length)] }))
     let px = 0, py = 0
     const mv = (e: PointerEvent) => { px = e.clientX / innerWidth - 0.5; py = e.clientY / innerHeight - 0.5 }
@@ -134,17 +134,19 @@ export function RiseText({ text, className = '', delay = 0 }: { text: string; cl
 /** Shared page entrance: soft rise in Minimal, an iris reveal in Grandeur. */
 export function usePageMotion() {
   const { ui } = useBuddy()
-  if (ui === 'grandeur' && !reduced())
+  // Only opacity and transform move, so the change of screen stays smooth on
+  // a phone; the old screen leaves quickly and the new one settles slowly.
+  const calm = [0.22, 1, 0.36, 1] as const
+  if (reduced()) return { initial: { opacity: 0 }, animate: { opacity: 1 }, exit: { opacity: 0 }, transition: { duration: 0.3 } }
+  if (ui === 'grandeur')
     return {
-      initial: { opacity: 0, clipPath: 'circle(0% at 50% 92%)' },
-      animate: { opacity: 1, clipPath: 'circle(160% at 50% 92%)', transitionEnd: { clipPath: 'none' } },
-      exit: { opacity: 0, scale: 0.98 },
-      transition: { duration: 0.75, ease: [0.65, 0, 0.35, 1] as const },
+      initial: { opacity: 0, scale: 0.975, y: 10 },
+      animate: { opacity: 1, scale: 1, y: 0, transition: { duration: 0.8, ease: calm } },
+      exit: { opacity: 0, scale: 0.99, transition: { duration: 0.22, ease: 'easeIn' as const } },
     }
   return {
-    initial: { opacity: 0, y: 16 },
-    animate: { opacity: 1, y: 0 },
-    exit: { opacity: 0, y: -8 },
-    transition: { duration: 0.35, ease: [0.2, 0.8, 0.2, 1] as const },
+    initial: { opacity: 0, y: 12 },
+    animate: { opacity: 1, y: 0, transition: { duration: 0.6, ease: calm } },
+    exit: { opacity: 0, y: -4, transition: { duration: 0.2, ease: 'easeIn' as const } },
   }
 }

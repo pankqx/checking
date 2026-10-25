@@ -37,7 +37,7 @@ export default function Pendant() {
   }
 
   return (
-    <Screen title={<>Your <span className="display-i text-sindoor">necklace</span>.</>} kicker="hands-free companion">
+    <Screen title={<>Your <span className="display-i text-accent">necklace</span>.</>} kicker="hands-free companion">
       <div className="card relative flex flex-col items-center overflow-hidden px-6 pb-6 pt-2" style={{ background: 'linear-gradient(180deg, var(--card), var(--paper-2))' }}>
         <PendantArt led={LED[p.status]} pulse={p.status === 'listening' || p.status === 'pairing' || p.status === 'reconnecting'} spin={p.status === 'processing' || p.status === 'receiving'} speaking={p.status === 'speaking'} level={p.level} />
         <AnimatePresence mode="wait">
@@ -59,7 +59,7 @@ export default function Pendant() {
         <div className="mt-4 space-y-3">
           <ol className="card space-y-3 p-5 text-sm">
             {['Switch the necklace on. It plays a two-note chime and the light glows softly.', 'Keep it near your phone, with Bluetooth on. Use Chrome on Android.', 'Tap “Pair necklace” and choose MindMirror in the list.'].map((s, i) => (
-              <li key={i} className="flex gap-3"><span className="display text-xl text-sindoor">{i + 1}</span><span className="pt-1">{s}</span></li>
+              <li key={i} className="flex gap-3"><span className="display text-xl text-accent">{i + 1}</span><span className="pt-1">{s}</span></li>
             ))}
           </ol>
           <button className="btn w-full py-4" onClick={pairPendant} disabled={!bleSupported()}>Pair necklace</button>

@@ -1,13 +1,16 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useState } from 'react'
 import { Area, AreaChart, CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import { SignalLotus, SkyScene, SupportPath } from '../components/art'
 import { Orb } from '../components/Orb'
 import { Screen, Section, Stamp } from '../components/ui'
 import { healthDaily, LADDER, mean, moodSeries, round1, SIGNAL_META } from '../lib/analysis'
 import { db, dayKey } from '../lib/db'
 import { go, type Route } from '../lib/nav'
 import { useData } from '../lib/useData'
-import { LEVEL_STYLE } from './Home'
+import { useBuddy } from '../lib/buddy'
+import { isDark } from '../games/ascii'
+import { LEVEL_STYLE } from '../lib/levels'
 
 const short = (d: string) => new Date(d + 'T12:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
 const axis = { stroke: 'var(--ink-faint)', fontSize: 11, tickLine: false, axisLine: false }
@@ -16,6 +19,8 @@ const tip = { contentStyle: { background: 'var(--card)', border: '1px solid var(
 export default function Insights() {
   const d = useData()
   const [open, setOpen] = useState<string | null>(null)
+  const { ui } = useBuddy()
+  const night = ui === 'grandeur' || isDark()
   const sessions = useLiveQuery(() => db.sessions.toArray(), []) ?? []
   const series = moodSeries(d.checkins).slice(-21).map((s) => ({ ...s, label: short(s.day) }))
   const normal = d.profile?.usualSleep ?? mean(series.slice(0, -3).filter((s) => s.sleep != null).map((s) => s.sleep!))
@@ -32,13 +37,16 @@ export default function Insights() {
   const roomMin = Math.round(sessions.filter((s) => dayKey(s.at) >= weekAgo).reduce((a, s) => a + s.minutes, 0))
 
   return (
-    <Screen title={<>What&rsquo;s <span className="display-i text-sindoor">changed</span>?</>} kicker="insights · you vs your normal">
-      <div className="card flex items-center gap-4 overflow-hidden p-5" style={{ background: 'linear-gradient(135deg, #2e3a8c, #5b3fa8 70%, #8a3f7a)', color: '#f3eee4', borderColor: 'transparent' }}>
-        <Orb mood={d.lastMood} size={96} face={false} />
-        <div>
-          <p className="text-[11px] font-bold uppercase tracking-[0.2em] opacity-70">Mind weather</p>
-          <p className="display text-3xl">{d.weather.name}</p>
-          <p className="mt-1 text-sm opacity-80">{d.weather.line}</p>
+    <Screen title={<>What&rsquo;s <span className="display-i text-accent">changed</span>?</>} kicker="insights · you vs your normal">
+      <div className="card overflow-hidden p-0">
+        <SkyScene variant="banner" weather={d.weather} tod={night ? 'night' : undefined} className="block aspect-[2/1] w-full" />
+        <div className="flex items-center gap-4 p-5 pt-4">
+          <Orb mood={d.lastMood} size={72} face={false} />
+          <div className="min-w-0">
+            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-ink-faint">Mind weather</p>
+            <p className="display text-3xl">{d.weather.name}</p>
+            <p className="mt-1 text-sm text-ink-soft">{d.weather.line}</p>
+          </div>
         </div>
       </div>
       <p className="mt-3 px-1 text-xs text-ink-faint">Not a diagnosis. Each signal compares your last few days with your own previous weeks.</p>
@@ -46,8 +54,8 @@ export default function Insights() {
       <Section title="Insights for you">
         <div className="snap-row -mx-4">
           {d.insights.map((i) => (
-            <div key={i.id} className="card flex w-[82%] flex-col p-5 sm:w-80" style={{ borderColor: i.tone === 'care' ? 'var(--sindoor)' : i.tone === 'nudge' ? 'var(--haldi)' : 'var(--pista)' }}>
-              {i.metric && <p className="display text-4xl" style={{ color: i.tone === 'care' ? 'var(--sindoor)' : i.tone === 'nudge' ? 'var(--haldi)' : 'var(--pista)' }}>{i.metric.value}</p>}
+            <div key={i.id} className="card flex w-[82%] flex-col p-5 sm:w-80" style={{ borderColor: i.tone === 'care' ? 'var(--care)' : i.tone === 'nudge' ? 'var(--haldi)' : 'var(--pista)' }}>
+              {i.metric && <p className="display text-4xl" style={{ color: i.tone === 'care' ? 'var(--care-ink)' : i.tone === 'nudge' ? 'var(--shift-ink)' : 'var(--steady-ink)' }}>{i.metric.value}</p>}
               <p className="mt-1 text-lg font-semibold leading-snug">{i.title}</p>
               <p className="mt-2 text-sm text-ink-soft">{i.body}</p>
               <p className="mt-3 border-t border-dashed border-line pt-2 text-xs text-ink-faint">🔍 {i.proof}</p>
@@ -58,6 +66,10 @@ export default function Insights() {
       </Section>
 
       <Section title="Six early signals">
+        <div className="card mb-3 px-2 pt-4 pb-2">
+          <SignalLotus signals={d.signals} onPick={(id) => setOpen(id)} className="mx-auto block w-full max-w-sm" />
+          <p className="px-3 pb-1 text-center text-xs text-ink-faint">Tap a petal&rsquo;s name to see the proof below.</p>
+        </div>
         <div className="space-y-2">
           {d.signals.map((s) => (
             <button key={s.id} onClick={() => setOpen(open === s.id ? null : s.id)} className="card block w-full rounded-3xl p-4 text-left">
@@ -65,7 +77,7 @@ export default function Insights() {
                 <span className="size-3 rounded-full" style={{ background: LEVEL_STYLE[s.level].color }} />
                 <span className="font-semibold">{s.label}</span>
                 <span className="text-xs text-ink-faint">watches for {SIGNAL_META[s.id].sign}</span>
-                <span className="ml-auto"><Stamp color={LEVEL_STYLE[s.level].color === 'var(--line)' ? 'var(--ink-faint)' : LEVEL_STYLE[s.level].color}>{LEVEL_STYLE[s.level].label}</Stamp></span>
+                <span className="ml-auto shrink-0"><Stamp color={LEVEL_STYLE[s.level].color === 'var(--line)' ? 'var(--ink-faint)' : LEVEL_STYLE[s.level].color}>{LEVEL_STYLE[s.level].label}</Stamp></span>
               </div>
               <p className="mt-2 text-ink-soft">{s.headline}{s.delta ? <span className="ml-2 font-semibold text-ink">{s.delta}</span> : null}</p>
               {open === s.id && <p className="mt-2 text-xs text-ink-faint">🔍 Proof: {s.evidence}</p>}
@@ -79,13 +91,13 @@ export default function Insights() {
           <div className="card h-56 p-3 pr-5">
             <ResponsiveContainer>
               <AreaChart data={series} margin={{ top: 10, left: -20 }}>
-                <defs><linearGradient id="sl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="var(--neel)" stopOpacity={0.35} /><stop offset="1" stopColor="var(--neel)" stopOpacity={0} /></linearGradient></defs>
+                <defs><linearGradient id="sl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="var(--sky)" stopOpacity={0.55} /><stop offset="1" stopColor="var(--sky)" stopOpacity={0.04} /></linearGradient></defs>
                 <CartesianGrid vertical={false} stroke="var(--line)" strokeDasharray="3 4" />
                 <XAxis dataKey="label" {...axis} interval="preserveStartEnd" minTickGap={24} />
                 <YAxis {...axis} domain={[3, 10]} />
                 <Tooltip {...tip} formatter={(v) => [`${v} h`, 'sleep']} />
-                {Number.isFinite(normal) && <ReferenceLine y={round1(normal)} stroke="var(--sindoor)" strokeDasharray="5 4" label={{ value: `your normal ${round1(normal)} h`, fill: 'var(--sindoor)', fontSize: 11, position: 'insideTopLeft' }} />}
-                <Area type="monotone" dataKey="sleep" stroke="var(--neel)" strokeWidth={2.5} fill="url(#sl)" dot={false} connectNulls />
+                {Number.isFinite(normal) && <ReferenceLine y={round1(normal)} stroke="var(--dusk)" strokeWidth={1.5} strokeDasharray="5 5" label={{ value: `your normal ${round1(normal)} h`, fill: 'var(--ink-soft)', fontSize: 11, position: 'insideTopLeft' }} />}
+                <Area type="basis" dataKey="sleep" stroke="color-mix(in oklab, var(--accent) 55%, var(--sky))" strokeWidth={2.5} fill="url(#sl)" dot={false} connectNulls animationDuration={1400} />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -96,17 +108,21 @@ export default function Insights() {
         <Section title="Mood & energy">
           <div className="card h-52 p-3 pr-5">
             <ResponsiveContainer>
-              <LineChart data={series} margin={{ top: 10, left: -20 }}>
+              <AreaChart data={series} margin={{ top: 10, left: -20 }}>
+                <defs>
+                  <linearGradient id="md" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="var(--dusk)" stopOpacity={0.45} /><stop offset="1" stopColor="var(--dusk)" stopOpacity={0.02} /></linearGradient>
+                  <linearGradient id="en" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="var(--haldi)" stopOpacity={0.25} /><stop offset="1" stopColor="var(--haldi)" stopOpacity={0} /></linearGradient>
+                </defs>
                 <CartesianGrid vertical={false} stroke="var(--line)" strokeDasharray="3 4" />
                 <XAxis dataKey="label" {...axis} interval="preserveStartEnd" minTickGap={24} />
                 <YAxis {...axis} domain={[1, 5]} ticks={[1, 3, 5]} />
                 <Tooltip {...tip} />
-                <Line type="monotone" dataKey="mood" stroke="var(--sindoor)" strokeWidth={2.5} dot={false} />
-                <Line type="monotone" dataKey="energy" stroke="var(--haldi)" strokeWidth={2} strokeDasharray="1 0" dot={false} />
-              </LineChart>
+                <Area type="basis" dataKey="energy" stroke="var(--haldi)" strokeWidth={2} fill="url(#en)" dot={false} animationDuration={1400} />
+                <Area type="basis" dataKey="mood" stroke="var(--accent)" strokeWidth={2.5} fill="url(#md)" dot={false} animationDuration={1400} />
+              </AreaChart>
             </ResponsiveContainer>
           </div>
-          <p className="mt-2 flex gap-4 px-1 text-xs text-ink-faint"><span><b className="text-sindoor">—</b> mood</span><span><b className="text-haldi">—</b> energy</span></p>
+          <p className="mt-2 flex gap-4 px-1 text-xs text-ink-faint"><span><b className="text-accent">—</b> mood</span><span><b className="text-haldi">—</b> energy</span></p>
         </Section>
       )}
 
@@ -119,7 +135,7 @@ export default function Insights() {
                 <XAxis dataKey="label" {...axis} interval="preserveStartEnd" minTickGap={24} />
                 <YAxis {...axis} domain={['dataMin - 3', 'dataMax + 3']} />
                 <Tooltip {...tip} formatter={(v) => [`${Math.round(+(v ?? 0))} bpm`, 'resting HR']} />
-                <Line type="monotone" dataKey="v" stroke="var(--pista)" strokeWidth={2.5} dot={false} />
+                <Line type="basis" dataKey="v" stroke="var(--pista)" strokeWidth={2.5} dot={false} animationDuration={1400} />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -138,6 +154,7 @@ export default function Insights() {
       </Section>
 
       <Section title="Support ladder">
+        <div className="card mb-3 p-3"><SupportPath rung={d.weather.rung} className="block w-full" /></div>
         <ol className="space-y-2">
           {LADDER.map((l) => (
             <li key={l.rung} className={`card flex gap-4 p-4 ${l.rung === d.weather.rung ? 'ring-2 ring-haldi' : 'opacity-80'}`}>
@@ -147,7 +164,7 @@ export default function Insights() {
                 <p className="mt-1 text-sm text-ink-soft">{l.body}</p>
                 {l.rung === 3 && (
                   <div className="mt-3 flex gap-2">
-                    <a className="btn bg-sindoor py-2 text-sm" href="tel:14416">Call 14416</a>
+                    <a className="btn btn-urgent py-2 text-sm" href="tel:14416">Call 14416</a>
                     <a className="btn btn-ghost py-2 text-sm" href="tel:112">112</a>
                   </div>
                 )}

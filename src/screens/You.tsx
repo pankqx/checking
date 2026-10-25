@@ -5,6 +5,7 @@ import { characters } from '../character/characters'
 import { InkCharacter } from '../character/InkCharacter'
 import { say, setCharacter, setVoice, useBuddy } from '../lib/buddy'
 import { db, wipeEverything } from '../lib/db'
+import { introWanted, setIntroWanted } from '../lib/intro'
 import { go } from '../lib/nav'
 import { seedDemo } from '../lib/seed'
 import { useData } from '../lib/useData'
@@ -16,6 +17,7 @@ export default function You() {
   const d = useData()
   const b = useBuddy()
   const [theme, setTheme] = useState<Theme>(readTheme)
+  const [intro, setIntro] = useState(introWanted)
   const applyTheme = (t: Theme) => {
     setTheme(t)
     try { localStorage.setItem('mm-theme', t) } catch { /* private mode */ }
@@ -34,7 +36,7 @@ export default function You() {
   const records = d.checkins.length + d.thoughts.length + d.tasks.length + d.health.length + d.habits.length
 
   return (
-    <Screen title={<>You, <span className="display-i text-sindoor">kept private</span>.</>} kicker="settings · data · help">
+    <Screen title={<>You, <span className="display-i text-accent">kept private</span>.</>} kicker="settings · data · help">
       <div className="card p-5">
         <label className="text-xs font-semibold uppercase tracking-widest text-ink-faint">Name</label>
         <input defaultValue={d.profile?.name} onBlur={(e) => db.profile.update('me', { name: e.target.value || undefined })} placeholder="what should I call you?" className="display mt-1 w-full bg-transparent text-3xl outline-none" />
@@ -48,7 +50,7 @@ export default function You() {
       <Section title="Your companion">
         <div className="grid grid-cols-2 gap-3">
           {Object.values(characters).map((c) => (
-            <button key={c.id} onClick={() => { setCharacter(c.id); setTimeout(() => say(`Hi! It’s ${c.name}. I’m here whenever you need me.`, { greet: true, expression: 'happy' }), 50) }} className={`card overflow-hidden p-0 text-left ${b.character === c.id ? 'ring-2 ring-sindoor' : ''}`}>
+            <button key={c.id} onClick={() => { setCharacter(c.id); setTimeout(() => say(`Hi! It’s ${c.name}. I’m here whenever you need me.`, { greet: true, expression: 'happy' }), 50) }} className={`card overflow-hidden p-0 text-left ${b.character === c.id ? 'ring-2 ring-accent' : ''}`}>
               <div className="flex h-44 justify-center overflow-hidden bg-paper-2"><InkCharacter config={c} state={b.character === c.id ? b.state : 'IDLE'} expression={b.character === c.id ? b.expression : 'neutral'} height={260} track={false} /></div>
               <div className="p-3"><p className="font-semibold">{c.name}</p><p className="text-xs text-ink-faint">{c.tagline}</p></div>
             </button>
@@ -65,6 +67,17 @@ export default function You() {
         <div className="flex gap-2">{(['auto', 'light', 'dark'] as Theme[]).map((t) => <button key={t} className="chip flex-1 capitalize" aria-pressed={theme === t} onClick={() => applyTheme(t)}>{t === 'auto' ? 'Match phone' : t === 'light' ? 'Day paper' : 'Night ink'}</button>)}</div>
       </Section>
 
+      <Section title="Calm play">
+        <div className="card flex flex-col gap-3 p-5">
+          <p className="text-sm text-ink-soft">&ldquo;Calm the sea&rdquo; opens the app once per visit: tap five glowing balls and the storm settles into waves. You can always skip it.</p>
+          <div className="flex gap-2">
+            <button className="chip flex-1" aria-pressed={intro} onClick={() => { setIntroWanted(true); setIntro(true) }}>Show on open</button>
+            <button className="chip flex-1" aria-pressed={!intro} onClick={() => { setIntroWanted(false); setIntro(false) }}>Don&rsquo;t show</button>
+          </div>
+          <button className="btn btn-ghost self-start py-2 text-sm" onClick={() => go('play')}>Open the play room →</button>
+        </div>
+      </Section>
+
       <Section title="Devices">
         <div className="grid grid-cols-2 gap-2">
           <button className="card p-4 text-left" onClick={() => go('body')}><p className="font-semibold">Watch & body</p><p className="text-sm text-ink-faint">heart rate, import</p></button>
@@ -79,7 +92,7 @@ export default function You() {
             <button className="btn btn-ghost" onClick={exportAll}>Export as JSON</button>
             {!d.checkins.length && <button className="btn btn-ghost" onClick={seedDemo}>Load sample data</button>}
           </div>
-          <button className="btn w-full bg-sindoor" onClick={() => confirm('Delete everything MindMirror knows about you? This cannot be undone.') && wipeEverything()}>Delete all my data</button>
+          <button className="btn btn-urgent w-full" onClick={() => confirm('Delete everything MindMirror knows about you? This cannot be undone.') && wipeEverything()}>Delete all my data</button>
         </div>
       </Section>
 

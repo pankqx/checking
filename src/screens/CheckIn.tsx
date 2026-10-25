@@ -79,13 +79,13 @@ export default function CheckIn() {
 
   if (done != null)
     return (
-      <Screen title={<>Saved. <span className="display-i text-sindoor">Thank you.</span></>} kicker="check-in">
+      <Screen title={<>Saved. <span className="display-i text-accent">Thank you.</span></>} kicker="check-in">
         <div className="flex flex-col items-center text-center">
           <Orb mood={mood ?? 3} size={200} />
           <div className="mt-2 flex w-full items-start gap-3 text-left"><BuddyBadge size={56} /><Caption className="flex-1" /></div>
           <p className="display mt-4 text-6xl">{done}s</p>
           <p className="text-ink-soft">That&rsquo;s all it took. Small daily notes are how I learn your normal.</p>
-          {isCrisis(note) && <div className="card mt-6 border-sindoor p-5 text-left"><p className="font-semibold text-sindoor">Please don&rsquo;t carry this alone</p><p className="mt-1 text-sm">{HELPLINE}</p><a href="tel:14416" className="btn mt-4 bg-sindoor">Call Tele-MANAS 14416</a></div>}
+          {isCrisis(note) && <div className="card mt-6 border-(--care) p-5 text-left"><p className="font-semibold text-(--care-ink)">Please don&rsquo;t carry this alone</p><p className="mt-1 text-sm">{HELPLINE}</p><a href="tel:14416" className="btn btn-urgent mt-4">Call Tele-MANAS 14416</a></div>}
           <div className="mt-8 flex gap-3">
             <button className="btn" onClick={() => go('insights')}>See what changed</button>
             <button className="btn btn-ghost" onClick={() => go('home')}>Home</button>
@@ -95,7 +95,7 @@ export default function CheckIn() {
     )
 
   return (
-    <Screen title={<>How&rsquo;s your <span className="display-i text-sindoor">mind</span>?</>} kicker={`check-in · ${elapsed}s`}>
+    <Screen title={<>How&rsquo;s your <span className="display-i text-accent">mind</span>?</>} kicker={`check-in · ${elapsed}s`}>
       <div className="mb-5 flex items-start gap-3"><BuddyBadge size={60} /><Caption className="flex-1" /></div>
       {/* Mood: tap an orb */}
       <div className="grid grid-cols-5 gap-1">
@@ -135,7 +135,7 @@ export default function CheckIn() {
               </div>
               <div className="card flex items-start gap-3 p-3">
                 <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={2} placeholder="One line about today… or say it" className="flex-1 resize-none bg-transparent p-1 outline-none" />
-                <button onClick={toggleVoice} disabled={voice === 'think'} className={`grid size-11 shrink-0 place-items-center rounded-full ${voice === 'rec' ? 'animate-pulse bg-sindoor text-white' : 'bg-paper-2'}`} aria-label="Voice check-in">
+                <button onClick={toggleVoice} disabled={voice === 'think'} className={`grid size-11 shrink-0 place-items-center rounded-full ${voice === 'rec' ? 'animate-pulse bg-care text-white' : 'bg-paper-2'}`} aria-label="Voice check-in">
                   {voice === 'think' ? <span className="text-[10px]">{dl != null ? `${Math.round(dl)}%` : '…'}</span> : <MicIcon />}
                 </button>
               </div>

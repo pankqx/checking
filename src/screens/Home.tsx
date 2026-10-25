@@ -3,9 +3,11 @@ import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Buddy, Caption } from '../components/Buddy'
 import { ModeToggle, RiseText, useCoverflow, usePageMotion } from '../components/fx'
 import { Orb } from '../components/Orb'
+import { SignalLotus, SkyScene, SupportPath } from '../components/art'
 import { Doodle, Section, Stamp } from '../components/ui'
 import { pick, characters } from '../character/characters'
-import { LADDER, pressureMap, SIGNAL_META, type Insight, type Level, type Signal } from '../lib/analysis'
+import { LADDER, pressureMap, type Insight, type Signal } from '../lib/analysis'
+import { LEVEL_STYLE } from '../lib/levels'
 import { sayOnce, useBuddy } from '../lib/buddy'
 import { go, type Route } from '../lib/nav'
 import { usePendant } from '../lib/pendantStore'
@@ -14,13 +16,6 @@ import { useData } from '../lib/useData'
 const greet = () => {
   const h = new Date().getHours()
   return h < 5 ? 'Still up' : h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening'
-}
-
-export const LEVEL_STYLE: Record<Level, { label: string; color: string; fill: number }> = {
-  steady: { label: 'steady', color: 'var(--pista)', fill: 0.25 },
-  shifting: { label: 'shifting', color: 'var(--haldi)', fill: 0.6 },
-  strained: { label: 'strained', color: 'var(--sindoor)', fill: 1 },
-  unknown: { label: 'learning', color: 'var(--line)', fill: 0.1 },
 }
 
 const SPOKEN: Record<string, string> = {
@@ -84,10 +79,10 @@ export default function Home() {
           <h1 className={`display leading-[1.02] ${grand ? 'text-[3.1rem] md:text-7xl' : 'text-[2.6rem] md:text-6xl'}`}>
             {grand ? <RiseText text={`${greet()},`} /> : `${greet()},`}
             <br />
-            <span className="display-i text-sindoor">{name ?? 'friend'}</span>
+            <span className="display-i text-accent">{name ?? 'friend'}</span>
           </h1>
           <button onClick={() => go('insights')} className="mt-4 flex items-center gap-2 text-left">
-            <Stamp color={d.weather.rung >= 2 ? 'var(--sindoor)' : d.weather.rung === 1 ? 'var(--haldi)' : 'var(--pista)'}>Mind weather</Stamp>
+            <Stamp color={d.weather.rung >= 2 ? 'var(--care)' : d.weather.rung === 1 ? 'var(--haldi)' : 'var(--pista)'}>Mind weather</Stamp>
             <span className="display-i text-xl">{d.weather.name}</span>
           </button>
           <p className="mt-1 max-w-sm text-ink-soft">{d.weather.line}</p>
@@ -97,7 +92,7 @@ export default function Home() {
         <div className="relative mx-auto mt-2 flex w-full max-w-md flex-col items-center md:mt-0">
           <div className="relative">
             {grand && <SignalOrbit signals={d.signals} />}
-            {!grand && <div className="absolute inset-x-6 bottom-6 top-16 -z-10 rounded-[48%_52%_40%_60%] bg-paper-2" />}
+            {!grand && <SkyScene variant="arch" weather={d.weather} className="absolute left-1/2 top-6 -z-10 w-[272px] -translate-x-1/2 drop-shadow-[0_18px_30px_rgba(46,53,115,0.16)]" />}
             <button onClick={() => go('companion')} aria-label={`Talk to ${cfg.name}`} className="relative block">
               <Buddy height={grand ? 430 : 340} />
             </button>
@@ -130,6 +125,11 @@ export default function Home() {
           <p className="mt-2 line-clamp-3 text-sm opacity-80">{top?.body}</p>
           {top?.metric && <p className="mt-3 inline-block rounded-full bg-white/15 px-3 py-1 text-xs font-semibold">{top.metric.label} · {top.metric.value}</p>}
         </Widget>
+        <Widget route="play" tint="#1d2356" kicker="Calm play" art="wave">
+          <pre aria-hidden className="mb-3 overflow-hidden font-mono text-[11px] leading-[1.35] text-[#80b1d8]"><span className="text-[#d9dcff]">{'  .   +     .   '}</span><span className="text-[#f6efd2]">(@)</span>{'\n'}<span className="text-[#6c78b8]">{'------------=------'}</span>{'\n'}{' ~-~~ . ~~'}<span className="text-[#f1e4b8]">=~</span>{' -~ ~'}{'\n'}{'-~ . ~~-~ '}<span className="text-[#f1e4b8]">==</span>{' ~ .~-'}</pre>
+          <p className="display text-2xl leading-tight">Calm the sea.</p>
+          <p className="mt-2 text-sm opacity-75">Ripples · Zen garden · no scores</p>
+        </Widget>
         <Widget route="thoughts" tint="var(--haldi)" dark kicker="Thoughts" art="cloud">
           {latestThought ? (
             <>
@@ -144,9 +144,9 @@ export default function Home() {
           <p className="display text-2xl leading-tight">Breathe with the tanpura.</p>
           <p className="mt-2 text-sm opacity-75">{cfg.name} guides you · Box · 4-7-8 · Calm</p>
         </Widget>
-        <Widget route="release" tint="var(--sindoor)" kicker="Pressure release" art="grid">
+        <Widget route="release" tint="var(--gulabi)" dark kicker="Pressure release" art="grid">
           <p className="display text-2xl leading-tight">Pop. Shred. Shout. Scribble.</p>
-          <p className="mt-2 text-sm opacity-85">Let the pressure out, privately.</p>
+          <p className="mt-2 text-sm opacity-75">Let the pressure out, privately.</p>
         </Widget>
         <Widget route="body" tint="var(--pista)" dark kicker="Body" art="heart">
           {restingHr ? (
@@ -166,16 +166,9 @@ export default function Home() {
 
       <div className="px-5 md:grid md:grid-cols-2 md:gap-6">
         <Section title="Six early signals" action={<button className="text-sm text-ink-soft underline underline-offset-4" onClick={() => go('insights')}>proof</button>}>
-          <div className="grid grid-cols-3 gap-2">
-            {d.signals.map((s, i) => (
-              <motion.button key={s.id} initial={{ opacity: 0, y: 14 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.06 }} onClick={() => go('insights')} className="card flex flex-col items-start gap-2 rounded-3xl p-3 text-left">
-                <span className="relative block size-7 rounded-full border-2" style={{ borderColor: SIGNAL_META[s.id].color }}>
-                  <motion.span className="absolute inset-0.5 rounded-full" style={{ background: LEVEL_STYLE[s.level].color }} animate={s.level === 'strained' ? { opacity: [0.5, 1, 0.5], scale: [0.9, 1.05, 0.9] } : { opacity: 0.25 + LEVEL_STYLE[s.level].fill * 0.75 }} transition={{ duration: 2.4, repeat: s.level === 'strained' ? Infinity : 0 }} />
-                </span>
-                <span className="text-sm font-semibold">{s.label}</span>
-                <span className="text-[11px] uppercase tracking-wider text-ink-faint">{LEVEL_STYLE[s.level].label}</span>
-              </motion.button>
-            ))}
+          <div className="card px-2 pt-4 pb-3">
+            <SignalLotus signals={d.signals} onPick={() => go('insights')} className="mx-auto block w-full max-w-sm" />
+            <p className="px-3 pt-1 text-center text-xs text-ink-faint">Each petal is one signal, compared with your own normal. Fuller and warmer means it needs a little care.</p>
           </div>
         </Section>
 
@@ -186,30 +179,29 @@ export default function Home() {
                 <div key={p.day} className="flex flex-1 flex-col items-center gap-1">
                   <div className="relative flex h-24 w-full items-end justify-center">
                     <div className="absolute bottom-0 w-full rounded-t-lg border-2 border-dashed border-ink-faint/50" style={{ height: `${(p.planned / maxDue) * 100}%` }} />
-                    <motion.div initial={{ height: 0 }} whileInView={{ height: `${(p.due / maxDue) * 100}%` }} viewport={{ once: true }} transition={{ delay: i * 0.07, type: 'spring', stiffness: 120, damping: 14 }} className="w-3/5 rounded-t-lg" style={{ background: p.gap >= 2 ? 'var(--sindoor)' : 'var(--neel)', boxShadow: grand ? `0 0 18px ${p.gap >= 2 ? 'var(--sindoor)' : 'var(--neel)'}` : undefined }} />
+                    <motion.div initial={{ height: 0 }} animate={{ height: `${(p.due / maxDue) * 100}%` }} transition={{ delay: 0.4 + i * 0.08, duration: 1.1, ease: [0.22, 1, 0.36, 1] }} className="w-3/5 rounded-t-xl" style={{ background: p.gap >= 2 ? 'linear-gradient(var(--care), color-mix(in oklab, var(--care) 55%, var(--card)))' : 'linear-gradient(color-mix(in oklab, var(--accent) 70%, var(--sky)), color-mix(in oklab, var(--sky) 60%, var(--card)))', boxShadow: grand ? `0 0 18px ${p.gap >= 2 ? 'var(--care)' : 'var(--neel)'}` : undefined }} />
                   </div>
                   <span className="text-[11px] text-ink-faint">{i === 0 ? 'today' : new Date(p.day + 'T12:00').toLocaleDateString('en-IN', { weekday: 'narrow' })}</span>
                 </div>
               ))}
             </div>
-            <p className="mt-3 text-xs text-ink-faint">Solid = hours of work due · dashed = hours you planned</p>
+            <p className="mt-3 text-xs text-ink-faint">Solid = hours of work due · dashed = hours you planned · coral = more than you planned</p>
           </div>
         </Section>
       </div>
 
-      {d.weather.rung >= 1 && (
-        <div className="px-5">
-          <Section title="A next step">
-            <div className="card flex items-start gap-4 p-5" style={{ borderColor: 'var(--haldi)' }}>
-              <span className="display text-4xl text-haldi">{d.weather.rung + 1}</span>
-              <div>
-                <p className="font-semibold">{LADDER[d.weather.rung].title}</p>
-                <p className="mt-1 text-sm text-ink-soft">{LADDER[d.weather.rung].body}</p>
-              </div>
+      <div className="px-5">
+        <Section title="Your next small step">
+          <div className="card p-4">
+            <SupportPath rung={d.weather.rung} className="block w-full" />
+            <div className="mt-2 px-1">
+              <p className="font-semibold">{LADDER[d.weather.rung].title}</p>
+              <p className="mt-1 text-sm text-ink-soft">{LADDER[d.weather.rung].body}</p>
+              <p className="mt-2 text-xs text-ink-faint">The path is the same for everyone. You can step to any stone, any time.</p>
             </div>
-          </Section>
-        </div>
-      )}
+          </div>
+        </Section>
+      </div>
 
       <p className="mt-10 flex items-center justify-center gap-2 px-5 text-center text-xs text-ink-faint">
         <span className="inline-block size-2 rounded-full bg-pista" /> Private by design · 0 personal records sent online

@@ -1,4 +1,5 @@
-import { AnimatePresence } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
+import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Atmosphere } from './components/fx'
 import { db } from './lib/db'
@@ -15,13 +16,28 @@ import Companion from './screens/Companion'
 import Planner from './screens/Planner'
 import Pendant from './screens/Pendant'
 import You from './screens/You'
+import Play from './screens/Play'
+import CalmSea from './games/CalmSea'
+import { introSeen, introWanted, markIntroSeen } from './lib/intro'
 
 const SCREENS: Record<Route, () => React.ReactElement> = {
   home: Home, checkin: CheckIn, insights: Insights, thoughts: Thoughts, meditation: Meditation,
-  release: Release, body: Body, companion: Companion, planner: Planner, pendant: Pendant, you: You,
+  release: Release, body: Body, companion: Companion, planner: Planner, pendant: Pendant, you: You, play: Play,
 }
 
 export default function App() {
+  const [intro, setIntro] = useState(() => introWanted() && !introSeen())
+  return (
+    <>
+      <AnimatePresence>
+        {intro && <CalmSea key="intro" onDone={() => { markIntroSeen(); setIntro(false) }} />}
+      </AnimatePresence>
+      {!intro && <Main />}
+    </>
+  )
+}
+
+function Main() {
   const route = useRoute()
   const profile = useLiveQuery(() => db.profile.get('me').then((p) => p ?? null), [])
   if (profile === undefined) return null
@@ -31,7 +47,7 @@ export default function App() {
   return (
     <>
       <Atmosphere />
-      <AnimatePresence mode="wait">
+      <AnimatePresence mode="wait" onExitComplete={() => scrollTo({ top: 0, behavior: 'instant' })}>
         <S key={route} />
       </AnimatePresence>
       {!immersive && <Dock route={route} />}
@@ -48,8 +64,9 @@ const ICONS: Record<string, React.ReactElement> = {
 
 function Dock({ route }: { route: Route }) {
   const item = (r: Route, label: string) => (
-    <button onClick={() => go(r)} className={`flex flex-1 flex-col items-center gap-1 py-2 text-[11px] font-semibold ${route === r ? 'text-ink' : 'text-ink-faint'}`} aria-current={route === r}>
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" strokeLinecap="round">{ICONS[r]}</svg>
+    <button onClick={() => go(r)} className={`relative flex flex-1 flex-col items-center gap-1 py-2 text-[11px] font-semibold transition-colors duration-500 ${route === r ? 'text-ink' : 'text-ink-faint'}`} aria-current={route === r ? 'page' : undefined}>
+      {route === r && <motion.span layoutId="dock-dot" className="absolute top-1 h-1 w-5 rounded-full bg-accent" transition={{ type: 'spring', stiffness: 260, damping: 30 }} />}
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" strokeLinecap="round" className="mt-1">{ICONS[r]}</svg>
       {label}
     </button>
   )
@@ -58,8 +75,9 @@ function Dock({ route }: { route: Route }) {
       <div className="mx-auto flex max-w-md items-center rounded-full border border-line bg-card/90 px-2 shadow-[var(--shadow)] backdrop-blur-xl">
         {item('home', 'Today')}
         {item('planner', 'Plan')}
-        <button onClick={() => go('checkin')} className="-mt-7 grid size-16 place-items-center rounded-full bg-sindoor text-white shadow-lg ring-8 ring-paper" aria-label="Check in">
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
+        <button onClick={() => go('checkin')} className="relative -mt-7 grid size-16 place-items-center rounded-full text-white shadow-[0_12px_30px_-10px_rgba(46,53,115,.65)] ring-8 ring-paper" style={{ background: 'radial-gradient(circle at 32% 28%, color-mix(in oklab, var(--sky) 80%, #fff), color-mix(in oklab, var(--accent) 85%, #000) 78%)' }} aria-label="Check in">
+          <span className="breathe absolute inset-0 rounded-full border-2 border-[color-mix(in_oklab,var(--sky)_70%,transparent)]" style={{ ['--breathe-to' as string]: 1.18 }} aria-hidden />
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden><path d="M12 5v14M5 12h14" /></svg>
         </button>
         {item('companion', 'Mirror')}
         {item('you', 'You')}

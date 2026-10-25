@@ -1,9 +1,9 @@
 import { motion } from 'framer-motion'
 
 // The "mirror": a breathing ink blob whose colour and shape follow the mood.
-// Mood 1 = heavy indigo, 3 = haldi, 5 = sindoor sunrise.
+// Mood 1 = heavy indigo, 3 = haldi, 5 = coral sunrise.
 
-const PALETTE = ['var(--neel)', 'var(--neel)', 'var(--pista)', 'var(--haldi)', 'var(--gulabi)', 'var(--sindoor)']
+const PALETTE = ['var(--neel)', 'var(--neel)', 'var(--pista)', 'var(--haldi)', 'var(--gulabi)', 'var(--care)']
 
 const BLOBS = [
   'M60,-58C76,-42,86,-21,85,0C84,20,72,41,55,56C38,71,19,80,-2,82C-23,84,-46,79,-62,64C-78,49,-87,25,-86,1C-85,-22,-74,-44,-58,-60C-42,-76,-21,-86,0,-86C21,-86,44,-74,60,-58Z',

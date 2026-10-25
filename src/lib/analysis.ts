@@ -113,7 +113,7 @@ export interface Inputs {
 
 export const SIGNAL_META: Record<SignalId, { label: string; sign: string; color: string }> = {
   sleep: { label: 'Sleep', sign: 'poor sleep', color: 'var(--neel)' },
-  pressure: { label: 'Pressure', sign: 'academic pressure', color: 'var(--sindoor)' },
+  pressure: { label: 'Pressure', sign: 'academic pressure', color: 'var(--dusk)' },
   connection: { label: 'Connection', sign: 'isolation', color: 'var(--gulabi)' },
   energy: { label: 'Energy', sign: 'exhaustion', color: 'var(--haldi)' },
   drive: { label: 'Drive', sign: 'loss of motivation', color: 'var(--pista)' },

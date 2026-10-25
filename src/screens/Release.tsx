@@ -14,7 +14,7 @@ type Tool = 'bubbles' | 'shred' | 'shout' | 'scribble'
 const TOOLS: { id: Tool; name: string; line: string; color: string; art: 'grid' | 'wave' | 'spark' | 'cloud' }[] = [
   { id: 'bubbles', name: 'Bubble wrap', line: 'Pop until it feels better', color: 'var(--haldi)', art: 'grid' },
   { id: 'shred', name: 'Worry shredder', line: 'Type it. Shred it. Gone.', color: 'var(--gulabi)', art: 'wave' },
-  { id: 'shout', name: 'Shout jar', line: 'Fill the jar with your voice', color: 'var(--sindoor)', art: 'spark' },
+  { id: 'shout', name: 'Shout jar', line: 'Fill the jar with your voice', color: 'var(--care)', art: 'spark' },
   { id: 'scribble', name: 'Angry scribble', line: 'Scribble hard, then wipe', color: 'var(--pista)', art: 'cloud' },
 ]
 
@@ -30,11 +30,11 @@ export default function Release() {
     if (m > 0.2) db.sessions.add({ at: Date.now(), room: 'release', activity: 'release', minutes: Math.round(m * 10) / 10 })
   }, [])
   return (
-    <Screen title={<>Let it <span className="display-i text-sindoor">out</span>.</>} kicker="pressure release room" tint="var(--sindoor)">
+    <Screen title={<>Let it <span className="display-i text-accent">out</span>.</>} kicker="pressure release room" tint="var(--gulabi)">
       <div className="mb-4 flex items-start gap-3"><BuddyBadge size={56} /><Caption className="flex-1" /></div>
       <div className="snap-row -mx-4">
         {TOOLS.map((t) => (
-          <button key={t.id} onClick={() => setTool(t.id)} className={`relative flex h-32 w-40 flex-col justify-end overflow-hidden rounded-3xl p-4 text-left transition ${tool === t.id ? 'ring-2 ring-ink' : 'opacity-75'}`} style={{ background: t.color, color: '#1e1b16' }}>
+          <button key={t.id} onClick={() => setTool(t.id)} className={`relative flex h-32 w-40 flex-col justify-end overflow-hidden rounded-3xl p-4 text-left transition ${tool === t.id ? 'ring-2 ring-ink' : 'opacity-75'}`} style={{ background: `color-mix(in oklab, ${t.color} 62%, #fff)`, color: '#1e1b16' }}>
             <Doodle kind={t.art} className="absolute -right-2 -top-2 size-16 opacity-30" />
             <span className="font-bold leading-tight">{t.name}</span>
             <span className="text-xs opacity-70">{t.line}</span>
@@ -111,7 +111,7 @@ function Shredder() {
           <motion.div key="w" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
             <p className="display-i text-xl text-ink-soft">What&rsquo;s weighing on you?</p>
             <textarea value={text} onChange={(e) => setText(e.target.value)} rows={4} placeholder="It won't be saved anywhere." className="mt-3 w-full resize-none rounded-2xl bg-paper-2 p-4 outline-none" />
-            <button className="btn mt-3 w-full bg-sindoor" onClick={go} disabled={!text.trim()}>Shred it</button>
+            <button className="btn mt-3 w-full" onClick={go} disabled={!text.trim()}>Shred it</button>
           </motion.div>
         )}
       </AnimatePresence>
@@ -156,7 +156,7 @@ function ShoutJar() {
         <defs><clipPath id="jar"><path d="M30 30h60v10c10 6 14 14 14 26v76a10 10 0 0 1-10 10H26a10 10 0 0 1-10-10V66c0-12 4-20 14-26z" /></clipPath></defs>
         <g clipPath="url(#jar)">
           <rect x="0" y="0" width="120" height="160" fill="var(--paper-2)" />
-          <motion.rect x="0" width="120" height="160" fill="var(--sindoor)" animate={{ y: 152 - (fill / 100) * 115 }} />
+          <motion.rect x="0" width="120" height="160" fill="var(--care)" animate={{ y: 152 - (fill / 100) * 115 }} />
         </g>
         <path d="M30 30h60v10c10 6 14 14 14 26v76a10 10 0 0 1-10 10H26a10 10 0 0 1-10-10V66c0-12 4-20 14-26z" fill="none" stroke="var(--ink)" strokeWidth="2.5" />
         <rect x="26" y="18" width="68" height="12" rx="4" fill="var(--ink)" />
@@ -164,7 +164,7 @@ function ShoutJar() {
       <p className="display mt-3 text-4xl">{Math.round(fill)}%</p>
       <p className="mt-1 text-center text-sm text-ink-soft">{fill >= 100 ? 'Jar full. Lid on. Feel any lighter?' : on ? 'Shout, sing, groan. Fill it up!' : 'Nothing is recorded, I only measure loudness.'}</p>
       <div className="mt-4 flex gap-2">
-        {!on && fill < 100 && <button className="btn bg-sindoor" onClick={start}>Open the jar</button>}
+        {!on && fill < 100 && <button className="btn" onClick={start}>Open the jar</button>}
         {on && <button className="btn btn-ghost" onClick={() => stop.current()}>Close</button>}
         {fill >= 100 && <button className="btn btn-ghost" onClick={() => setFill(0)}>Empty it</button>}
       </div>
@@ -192,7 +192,7 @@ function Scribble() {
     const now = performance.now()
     if (last.current) {
       const speed = Math.hypot(x - last.current.x, y - last.current.y) / Math.max(1, now - last.current.t)
-      g.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue(speed > 2 ? '--sindoor' : '--ink')
+      g.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue(speed > 2 ? '--care' : '--ink')
       g.lineWidth = Math.min(18, 2 + speed * 3) * devicePixelRatio
       g.lineCap = 'round'
       g.beginPath()
@@ -216,7 +216,7 @@ function Scribble() {
     <div className="card p-3">
       <canvas ref={ref} onPointerMove={draw} onPointerDown={(e) => { last.current = null; draw(e) }} onPointerUp={() => (last.current = null)} className={`h-80 w-full touch-none rounded-2xl bg-paper-2 transition-all duration-700 ${fade ? 'scale-95 opacity-0 blur-sm' : ''}`} />
       <div className="mt-3 flex items-center justify-between">
-        <span className="text-sm text-ink-soft">Faster strokes go red.</span>
+        <span className="text-sm text-ink-soft">Faster strokes turn coral.</span>
         <button className="btn btn-ghost py-2" onClick={wipe}>Wipe it away</button>
       </div>
     </div>

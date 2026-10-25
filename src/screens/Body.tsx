@@ -49,9 +49,9 @@ export default function Body() {
   }
 
   return (
-    <Screen title={<>Listen to your <span className="display-i text-sindoor">body</span>.</>} kicker="body · optional" tint="var(--pista)">
+    <Screen title={<>Listen to your <span className="display-i text-accent">body</span>.</>} kicker="body · optional" tint="var(--pista)">
       <div className="card relative overflow-hidden p-6 text-center">
-        <motion.div className="mx-auto grid size-40 place-items-center rounded-full" style={{ background: 'color-mix(in oklab, var(--sindoor) 18%, transparent)' }} animate={w.bpm ? { scale: [1, 1.08, 1] } : {}} transition={{ duration: w.bpm ? 60 / w.bpm : 1, repeat: Infinity }}>
+        <motion.div className="mx-auto grid size-40 place-items-center rounded-full" style={{ background: 'color-mix(in oklab, var(--pista) 22%, transparent)' }} animate={w.bpm ? { scale: [1, 1.08, 1] } : {}} transition={{ duration: w.bpm ? 60 / w.bpm : 1, repeat: Infinity }}>
           <div>
             <p className="display text-6xl">{w.bpm ?? '–'}</p>
             <p className="text-xs uppercase tracking-widest text-ink-faint">bpm</p>
@@ -59,7 +59,7 @@ export default function Body() {
         </motion.div>
         {w.hrv != null && <p className="mt-3 text-sm text-ink-soft">Heart-rate variability (RMSSD): <b>{w.hrv} ms</b></p>}
         <p className="mt-3 text-sm text-ink-soft">{w.status === 'live' ? `Live from ${w.name}` : w.status === 'connecting' ? 'Choose your watch in the popup…' : 'Not connected'}</p>
-        {w.error && <p className="mt-1 text-xs text-sindoor">{w.error.includes('cancel') ? 'Cancelled, no worries.' : w.error}</p>}
+        {w.error && <p className="mt-1 text-xs text-(--care-ink)">{w.error.includes('cancel') ? 'Cancelled, no worries.' : w.error}</p>}
         <div className="mt-4 flex justify-center gap-2">
           {w.status === 'live' ? <button className="btn btn-ghost" onClick={disconnectWatch}>Disconnect</button> : (
             <button className="btn" onClick={connectWatch} disabled={!bleSupported() || w.status === 'connecting'}>Connect watch</button>
@@ -106,7 +106,7 @@ export default function Body() {
         <div className="card space-y-2 p-5 text-sm">
           <p>{d.health.length} readings{rhr.length ? ` · resting HR on ${rhr.length} days` : ''}</p>
           <div className="flex flex-wrap gap-2">{[...sources].map((s) => <Stamp key={s} color="var(--ink-soft)">{s === 'ble' ? 'live watch' : s}</Stamp>)}</div>
-          {d.health.length > 0 && <button className="mt-2 text-sindoor underline underline-offset-4" onClick={() => confirm('Delete all body data?') && db.health.clear()}>Delete body data</button>}
+          {d.health.length > 0 && <button className="mt-2 text-(--care-ink) underline underline-offset-4" onClick={() => confirm('Delete all body data?') && db.health.clear()}>Delete body data</button>}
         </div>
       </Section>
     </Screen>

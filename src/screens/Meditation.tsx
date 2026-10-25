@@ -1,5 +1,6 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import { useEffect, useRef, useState } from 'react'
+import { BreathClock } from '../components/art'
 import { Buddy } from '../components/Buddy'
 import { chime, playScape, stopScape, type Scape } from '../lib/audio'
 import { hush, say, setFace, useBuddy } from '../lib/buddy'
@@ -101,11 +102,12 @@ export default function Meditation() {
         <div className="relative my-4 flex flex-1 flex-col items-center justify-center">
           <motion.div
             className="absolute rounded-full"
-            style={{ background: 'radial-gradient(circle, rgba(236,116,88,.55), rgba(140,152,238,.15) 60%, transparent 70%)' }}
+            style={{ background: 'radial-gradient(circle, rgba(169,195,240,.45), rgba(174,163,212,.16) 60%, transparent 70%)' }}
             animate={{ width: running ? (inhale ? 330 : exhale ? 150 : undefined) : 220, height: running ? (inhale ? 330 : exhale ? 150 : undefined) : 220 }}
             transition={{ duration: running ? secs : 1.5, ease: 'easeInOut' }}
           />
           <div className="relative flex flex-col items-center">
+            <BreathClock phases={phases} running={running} phase={phase} className="pointer-events-none absolute left-1/2 top-[44%] w-[340px] max-w-[92vw] -translate-x-1/2 -translate-y-1/2" />
             <Buddy height={300} track={!running} />
             <div className="-mt-20"><Lotus open={running ? (inhale ? 1 : exhale ? 0 : undefined) : 0.4} dur={running ? secs : 1.5} /></div>
           </div>

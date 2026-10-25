@@ -27,9 +27,13 @@ export function Screen({ title, kicker, children, back = 'home', tint }: { title
   )
 }
 
-export function Stamp({ children, color = 'var(--sindoor)' }: { children: ReactNode; color?: string }) {
+/** A soft label pill, tinted by `color` (any colour token). */
+export function Stamp({ children, color = 'var(--accent)' }: { children: ReactNode; color?: string }) {
   return (
-    <span className="inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider" style={{ borderColor: color, color }}>
+    <span
+      className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider"
+      style={{ background: `color-mix(in oklab, ${color} 18%, transparent)`, color: `color-mix(in oklab, ${color} 58%, var(--ink))` }}
+    >
       {children}
     </span>
   )

@@ -102,7 +102,7 @@ export default function Companion() {
               <div className={`max-w-[85%] whitespace-pre-line rounded-3xl px-4 py-3 ${m.role === 'me' ? 'rounded-br-md bg-ink text-paper' : 'rounded-bl-md border border-line bg-card'}`}>
                 {m.text}
                 {m.role === 'mirror' && isCrisis(msgs[msgs.indexOf(m) - 1]?.text ?? '') && (
-                  <div className="mt-3 flex gap-2"><a className="btn bg-sindoor py-2 text-sm" href="tel:14416">Call 14416</a><a className="btn btn-ghost py-2 text-sm" href="tel:112">112</a></div>
+                  <div className="mt-3 flex gap-2"><a className="btn btn-urgent py-2 text-sm" href="tel:14416">Call 14416</a><a className="btn btn-ghost py-2 text-sm" href="tel:112">112</a></div>
                 )}
                 {m.source === 'necklace' && <span className="mt-1 block text-[10px] opacity-60">via pendant</span>}
               </div>
@@ -121,7 +121,7 @@ export default function Companion() {
           </div>
           <form onSubmit={(e) => { e.preventDefault(); send(text) }} className="flex items-center gap-2 rounded-full border border-line bg-card p-1.5 pl-5 shadow-[var(--shadow)]">
             <input value={text} onChange={(e) => setText(e.target.value)} onFocus={() => getBuddy().state === 'IDLE' && setCharState('LISTENING')} onBlur={() => getBuddy().state === 'LISTENING' && setCharState('IDLE')} placeholder={rec ? 'Listening… tap mic to stop' : 'Say anything'} className="flex-1 bg-transparent outline-none" />
-            <button type="button" onClick={mic} className={`grid size-10 place-items-center rounded-full ${rec ? 'animate-pulse bg-sindoor text-white' : 'bg-paper-2'}`} aria-label="Speak"><MicIcon /></button>
+            <button type="button" onClick={mic} className={`grid size-10 place-items-center rounded-full ${rec ? 'animate-pulse bg-care text-white' : 'bg-paper-2'}`} aria-label="Speak"><MicIcon /></button>
             <button className="grid size-10 place-items-center rounded-full bg-ink text-paper" aria-label="Send" disabled={busy}>↑</button>
           </form>
         </div>

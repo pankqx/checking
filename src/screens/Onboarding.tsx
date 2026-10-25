@@ -58,7 +58,7 @@ export default function Onboarding() {
     {
       body: (
         <>
-          <h1 className="display text-5xl leading-[1.02]">Meet <span className="display-i text-sindoor">{cfg.name}</span>.</h1>
+          <h1 className="display text-5xl leading-[1.02]">Meet <span className="display-i text-accent">{cfg.name}</span>.</h1>
           <p className="mt-2 text-ink-soft">Your MindMirror companion. {cfg.tagline}.</p>
           <div className="mt-4 flex gap-2">
             {Object.values(characters).map((c) => (
@@ -77,10 +77,10 @@ export default function Onboarding() {
           <h1 className="display text-4xl">Pick a look.</h1>
           <div className="mt-6 grid grid-cols-2 gap-3">
             {([['minimal', 'Minimal', 'Paper, ink, calm'], ['grandeur', 'Grandeur', 'Stars, aurora, glow']] as const).map(([id, label, hint]) => (
-              <button key={id} onClick={() => setUi(id)} className={`overflow-hidden rounded-3xl border text-left transition ${b.ui === id ? 'border-transparent ring-2 ring-sindoor' : 'border-line'}`}>
+              <button key={id} onClick={() => setUi(id)} className={`overflow-hidden rounded-3xl border text-left transition ${b.ui === id ? 'border-transparent ring-2 ring-accent' : 'border-line'}`}>
                 <div className="relative h-28" style={id === 'minimal' ? { background: '#f3eee4' } : { background: 'radial-gradient(80% 80% at 70% 20%, rgba(167,139,250,.6), transparent), radial-gradient(60% 60% at 10% 90%, rgba(94,234,212,.4), transparent), #07060d' }}>
                   {id === 'minimal'
-                    ? <><span className="absolute left-4 top-4 size-10 rounded-full bg-[#d2553a]" /><span className="absolute left-16 top-6 h-2 w-16 rounded bg-[#1e1b16]" /><span className="absolute left-16 top-10 h-2 w-10 rounded bg-[#9a9284]" /><span className="absolute bottom-3 left-4 right-4 h-8 rounded-xl bg-[#e3a935]" /></>
+                    ? <><span className="absolute left-4 top-4 size-10 rounded-full bg-[#3f4c9c]" /><span className="absolute left-16 top-6 h-2 w-16 rounded bg-[#1e1b16]" /><span className="absolute left-16 top-10 h-2 w-10 rounded bg-[#9a9284]" /><span className="absolute bottom-3 left-4 right-4 h-8 rounded-xl bg-[#e3a935]" /></>
                     : <>{[...Array(12)].map((_, i) => <span key={i} className="absolute size-1 rounded-full bg-white" style={{ left: `${(i * 37) % 100}%`, top: `${(i * 53) % 100}%`, opacity: 0.4 + (i % 3) * 0.2 }} />)}<span className="absolute bottom-3 left-4 right-4 h-8 rounded-xl border border-white/20 bg-white/10" /></>}
                 </div>
                 <div className="bg-card p-3"><p className="font-semibold">{label}</p><p className="text-xs text-ink-faint">{hint}</p></div>
@@ -151,7 +151,7 @@ export default function Onboarding() {
       body: (
         <>
           <Kicker>totally optional</Kicker>
-          <div className="mb-4 flex items-center gap-4 text-sindoor">
+          <div className="mb-4 flex items-center gap-4 text-accent">
             <Doodle kind="heart" className="size-16" />
           </div>
           <h1 className="display text-4xl">Wear a smartwatch or fitness band?</h1>
@@ -167,7 +167,7 @@ export default function Onboarding() {
     {
       body: (
         <>
-          <h1 className="display text-5xl">That&rsquo;s all.<br /><span className="display-i text-sindoor">Really.</span></h1>
+          <h1 className="display text-5xl">That&rsquo;s all.<br /><span className="display-i text-accent">Really.</span></h1>
           <p className="mt-4 text-lg text-ink-soft">Tell me more whenever you want, or never. A 30-second check-in each day is all I need to start noticing patterns for you.</p>
         </>
       ),
@@ -182,7 +182,7 @@ export default function Onboarding() {
       <div className="relative z-10 mb-2 flex items-center justify-between">
         <div className="flex gap-1.5" aria-label={`Step ${step + 1} of ${steps.length}`}>
           {steps.map((_, i) => (
-            <span key={i} className="block h-1.5 rounded-full transition-all duration-500" style={{ width: i === step ? 22 : 6, background: i <= step ? 'var(--sindoor)' : 'var(--line)' }} />
+            <span key={i} className="block h-1.5 rounded-full transition-all duration-500" style={{ width: i === step ? 22 : 6, background: i <= step ? 'var(--accent)' : 'var(--line)' }} />
           ))}
         </div>
         {step > 0 && step < steps.length - 1 && (
@@ -209,7 +209,7 @@ export default function Onboarding() {
 
 interface Step { body: React.ReactNode; primary: [string, () => void]; skip?: string; secondary?: [string, () => void] }
 
-const Kicker = ({ children }: { children: React.ReactNode }) => <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-sindoor">{children}</p>
+const Kicker = ({ children }: { children: React.ReactNode }) => <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-accent">{children}</p>
 
 const Reply = ({ children }: { children: React.ReactNode }) => (
   <motion.p initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="mt-6 inline-block rounded-2xl rounded-bl-sm bg-paper-2 px-4 py-3 text-ink">
