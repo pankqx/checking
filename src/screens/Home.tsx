@@ -10,7 +10,7 @@ import { LADDER, pressureMap, type Insight, type Signal } from '../lib/analysis'
 import { LEVEL_STYLE } from '../lib/levels'
 import { sayOnce, useBuddy } from '../lib/buddy'
 import { go, type Route } from '../lib/nav'
-import { usePendant } from '../lib/pendantStore'
+import { useHub } from '../lib/hub'
 import { useData } from '../lib/useData'
 
 const greet = () => {
@@ -37,7 +37,7 @@ export function homeLine(name: string | undefined, top: Insight | undefined, che
 export default function Home() {
   const d = useData()
   const b = useBuddy()
-  const pendant = usePendant()
+  const hub = useHub()
   const pm = usePageMotion()
   const grand = b.ui === 'grandeur'
   const rail = useRef<HTMLDivElement>(null)
@@ -125,6 +125,10 @@ export default function Home() {
           <p className="mt-2 line-clamp-3 text-sm opacity-80">{top?.body}</p>
           {top?.metric && <p className="mt-3 inline-block rounded-full bg-white/15 px-3 py-1 text-xs font-semibold">{top.metric.label} · {top.metric.value}</p>}
         </Widget>
+        <Widget route="voice" tint="#272d63" kicker="Voice mode" art="pendant">
+          <p className="display text-2xl leading-tight">Just talk.</p>
+          <p className="mt-2 text-sm opacity-75">{hub.status === 'online' || hub.status === 'thinking' ? 'Necklace on · I’m listening' : 'Phone mic or your necklace'}</p>
+        </Widget>
         <Widget route="play" tint="#1d2356" kicker="Calm play" art="wave">
           <pre aria-hidden className="mb-3 overflow-hidden font-mono text-[11px] leading-[1.35] text-[#80b1d8]"><span className="text-[#d9dcff]">{'  .   +     .   '}</span><span className="text-[#f6efd2]">(@)</span>{'\n'}<span className="text-[#6c78b8]">{'------------=------'}</span>{'\n'}{' ~-~~ . ~~'}<span className="text-[#f1e4b8]">=~</span>{' -~ ~'}{'\n'}{'-~ . ~~-~ '}<span className="text-[#f1e4b8]">==</span>{' ~ .~-'}</pre>
           <p className="display text-2xl leading-tight">Calm the sea.</p>
@@ -158,10 +162,7 @@ export default function Home() {
             <p className="display text-2xl leading-tight">Connect a watch, if you like.</p>
           )}
         </Widget>
-        <Widget route="pendant" tint="#1e1b16" kicker="Necklace" art="pendant">
-          <p className="display text-2xl leading-tight">{pendant.name && pendant.status !== 'idle' && pendant.status !== 'error' ? pendant.name : 'Talk, hands-free.'}</p>
-          <p className="mt-2 text-sm opacity-75">{pendant.name && pendant.status !== 'idle' && pendant.status !== 'error' ? `Connected${pendant.battery != null ? ` · ${pendant.battery}%` : ''}` : 'It answers out loud'}</p>
-        </Widget>
+
       </div>
 
       <div className="px-5 md:grid md:grid-cols-2 md:gap-6">

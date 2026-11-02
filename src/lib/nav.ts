@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 
 export type Route =
   | 'home' | 'checkin' | 'insights' | 'thoughts' | 'meditation' | 'release'
-  | 'body' | 'companion' | 'planner' | 'pendant' | 'you' | 'play'
+  | 'body' | 'companion' | 'planner' | 'pendant' | 'you' | 'play' | 'voice'
 
 const read = (): Route => (location.hash.replace('#/', '') || 'home') as Route
 

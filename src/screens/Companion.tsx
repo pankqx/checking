@@ -104,7 +104,7 @@ export default function Companion() {
                 {m.role === 'mirror' && isCrisis(msgs[msgs.indexOf(m) - 1]?.text ?? '') && (
                   <div className="mt-3 flex gap-2"><a className="btn btn-urgent py-2 text-sm" href="tel:14416">Call 14416</a><a className="btn btn-ghost py-2 text-sm" href="tel:112">112</a></div>
                 )}
-                {m.source === 'necklace' && <span className="mt-1 block text-[10px] opacity-60">via pendant</span>}
+                {m.source === 'necklace' && <span className="mt-1 block text-[10px] opacity-60">via necklace</span>}
               </div>
             </motion.div>
           ))}

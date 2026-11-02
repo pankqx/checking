@@ -1,10 +1,9 @@
 import { AnimatePresence, motion } from 'framer-motion'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Atmosphere } from './components/fx'
 import { db } from './lib/db'
 import { go, useRoute, type Route } from './lib/nav'
-import Onboarding from './screens/Onboarding'
 import Home from './screens/Home'
 import CheckIn from './screens/CheckIn'
 import Insights from './screens/Insights'
@@ -17,12 +16,16 @@ import Planner from './screens/Planner'
 import Pendant from './screens/Pendant'
 import You from './screens/You'
 import Play from './screens/Play'
+import Start from './screens/Start'
+import Voice from './screens/Voice'
+import { NecklaceToast } from './components/NecklaceToast'
+import { connectHub, hubEnabled } from './lib/hub'
 import CalmSea from './games/CalmSea'
 import { introSeen, introWanted, markIntroSeen } from './lib/intro'
 
 const SCREENS: Record<Route, () => React.ReactElement> = {
   home: Home, checkin: CheckIn, insights: Insights, thoughts: Thoughts, meditation: Meditation,
-  release: Release, body: Body, companion: Companion, planner: Planner, pendant: Pendant, you: You, play: Play,
+  release: Release, body: Body, companion: Companion, planner: Planner, pendant: Pendant, you: You, play: Play, voice: Voice,
 }
 
 export default function App() {
@@ -40,17 +43,19 @@ export default function App() {
 function Main() {
   const route = useRoute()
   const profile = useLiveQuery(() => db.profile.get('me').then((p) => p ?? null), [])
+  // The necklace listens through the laptop hub once it has been turned on.
+  useEffect(() => { if (hubEnabled()) connectHub() }, [])
   if (profile === undefined) return null
-  if (!profile?.onboardedAt) return <><Atmosphere /><Onboarding /></>
-  const S = SCREENS[route] ?? Home
-  const immersive = route === 'meditation'
+  const S = profile?.onboardedAt ? SCREENS[route] ?? Home : Start
+  const immersive = !profile?.onboardedAt || route === 'meditation' || route === 'voice'
   return (
     <>
       <Atmosphere />
       <AnimatePresence mode="wait" onExitComplete={() => scrollTo({ top: 0, behavior: 'instant' })}>
-        <S key={route} />
+        <S key={profile?.onboardedAt ? route : 'start'} />
       </AnimatePresence>
       {!immersive && <Dock route={route} />}
+      <NecklaceToast hidden={route === 'voice' || !profile?.onboardedAt} />
     </>
   )
 }
